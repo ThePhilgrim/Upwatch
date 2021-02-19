@@ -23,48 +23,39 @@ def write_to_json(job_post_list):
         json.dump(json_dict, json_dump, indent=4)
 
 
-def message_printer(index, job_post_list):
+def message_printer(new_job_posts):
     """ Prints number of new jobs & their details """
-    if index == 0:
+    if len(new_job_posts) == 0:
         print("No New Job Posts")  # TODO: Remove this and exhange for return
-    elif index == 1:
+    elif len(new_job_posts) == 1:
         print(
-            f"""There is {index} new job post.
+            """There is 1 new job post.
         """
         )
     else:
         print(
-            f"""There are {index} new job posts.
+            f"""There are {len(new_job_posts)} new job posts.
         """
         )
-    job_post_index = 0
 
-    if index >= 4:
-        for job_post in job_post_list[:index]:
+    if len(new_job_posts) >= 4:
+        for job_post in new_job_posts:
             if job_post["Payment Type"] == "Fixed-price":
                 print(
                     f"{job_post['Job Title']} – {job_post['Payment Type']}: {job_post['Budget']}"
                 )
             else:
                 print(f"{job_post['Job Title']} – {job_post['Payment Type']}")
-            if job_post_index == index - 1:
-                print(job_post["URL"])
-            else:
-                print(job_post["URL"] + "\n")
-            job_post_index += 1
+            print(job_post["URL"] + "\n")
     else:
-        for job_post in job_post_list[:index]:
+        for job_post in new_job_posts:
             print(job_post["Job Title"])
             if job_post["Payment Type"] == "Fixed-price":
                 print(job_post["Payment Type"] + " " + job_post["Budget"])
             else:
                 print(job_post["Payment Type"])
             print(job_post["Job Description"] + "...")
-            if job_post_index == index - 1:
-                print(job_post["URL"])
-            else:
-                print(job_post["URL"] + "\n")
-            job_post_index += 1
+            print(job_post["URL"] + "\n")
 
 
 def json_difference_checker(json_content, job_post_list):
@@ -73,16 +64,11 @@ def json_difference_checker(json_content, job_post_list):
     # TODO: Add if json_content['Job Posts'][0]['URL'] not in job_post_list ->
     # Use json_content['Job Posts'][1]['URL'] & index start at -1 (I think, so user don't get 1 extra job post as "new")
 
-    previous_top_post = json_content["Job Posts"][0]["URL"]
+    old_job_urls = [job_post["URL"] for job_post in json_content["Job Posts"]]
 
-    index = 0
+    new_job_posts = [job_post for job_post in job_post_list if job_post["URL"] not in old_job_urls]
 
-    for job_post in job_post_list:
-        if job_post["URL"] == previous_top_post:
-            break
-        index += 1
-
-    message_printer(index, job_post_list)
+    message_printer(new_job_posts)
 
 
 def job_post_scraper():
@@ -111,7 +97,7 @@ def job_post_scraper():
         #     print("Error Connecting:", errc)
         #     print("Please check you internet connection and try again.")
         #     return
-        except requests.exceptions.Timeout as errt:
+        except requests.exceptions.Timeout:
             print("Your request timed out.")
             time.sleep(30)
             print("Trying again...")
@@ -154,7 +140,7 @@ def job_post_scraper():
     json_difference_checker(read_from_json(), job_post_list)  # TODO: Add conditional if json is empty (first time using the program)
 
     if job_post_list:
-            write_to_json(job_post_list)  # TODO: This needs to go in an if statement to make sure json doesn't get emptied on failure
+        write_to_json(job_post_list)
 
 
 job_post_scraper()

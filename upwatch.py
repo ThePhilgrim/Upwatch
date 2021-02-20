@@ -3,21 +3,20 @@ from bs4 import BeautifulSoup
 import json
 import time
 
-# import re  # For looking for eventual word counts in job posts & controlling the validity of url input.
-# Also needed for don't bother me rate
+# !import re  # For looking for eventual word counts in job posts & controlling the validity of url input.
 
 # TODO: Program needs to log into Upwork when clicking job url
 
 
-def read_from_json(job_post_list):
+def read_from_json(fallback_job_posts):
     """ Reads all the job posts from job_posts.json """
     try:  # Not sure if I need a try block
         with open("job_posts.json", "r") as job_posts_json:
             json_content = json.load(job_posts_json)
             return json_content
     except FileNotFoundError:
-        print("File not found – Attempting to create one.")
-        json_content = {"Job Posts": job_post_list}
+        print("File not found – Attempting to create one.")  # !Remove this when code is working properly.
+        json_content = {"Job Posts": fallback_job_posts}
         return json_content
         # TODO: Call function for running settings window
 
@@ -29,23 +28,57 @@ def write_to_json(job_post_list):
         json.dump(json_dict, json_dump, indent=4)
 
 
+def extract_hourly_price(hourly_payment_type):
+    """ Returns the hourly payment as int for message_printer() if-statement """
+    if "–" in hourly_payment_type:
+        # Accounts for job_post["Payment Type"] == "Hourly: $X.00–$Y.00"
+        # Looking at the $Y to account for the payment range.
+        return int(float(hourly_payment_type.split()[1].split("-")[1].lstrip("$")))
+    else:
+        # Accounts for job_post["Payment Type"] == "Hourly: $X.00"
+        return int(float(hourly_payment_type.split()[1].lstrip('$')))
+
+
+def extract_fixed_price(fixed_payment_type):
+    """ Returns the fixed price as int for message_printer() if-statement """
+    # Accounts for job_post["Budget"] == "$X"
+    return int(fixed_payment_type.lstrip("$"))
+
+
 def message_printer(new_job_posts):
-    """ Prints number of new jobs & their details """
-    if len(new_job_posts) == 0:
+    """ Prints number of new jobs (that satisfy user budget criteria) & their details """
+
+    fixed_lowest_rate = 25
+
+    hourly_lowest_rate = 0
+
+    selected_new_job_posts = []
+
+    for job_post in new_job_posts:
+        # job_post["Payment Type"] can be "Fixed-price", "Hourly: $X.00–$Y.00", or "Hourly"
+        if (
+            job_post["Payment Type"] == "Fixed-price"
+            and extract_fixed_price(job_post["Budget"]) >= fixed_lowest_rate
+        ):
+            selected_new_job_posts.append(job_post)
+        elif (job_post["Payment Type"].split()[0] == "Hourly:" and extract_hourly_price(job_post["Payment Type"]) >= hourly_lowest_rate) or job_post["Payment Type"] == "Hourly":
+            selected_new_job_posts.append(job_post)
+
+    if len(selected_new_job_posts) == 0:
         print("No New Job Posts")  # TODO: Remove this and exhange for return
-    elif len(new_job_posts) == 1:
+    elif len(selected_new_job_posts) == 1:
         print(
             """There is 1 new job post.
         """
         )
     else:
         print(
-            f"""There are {len(new_job_posts)} new job posts.
+            f"""There are {len(selected_new_job_posts)} new job posts.
         """
         )
 
-    if len(new_job_posts) >= 4:
-        for job_post in new_job_posts:
+    if len(selected_new_job_posts) >= 4:
+        for job_post in selected_new_job_posts:
             if job_post["Payment Type"] == "Fixed-price":
                 print(
                     f"{job_post['Job Title']} – {job_post['Payment Type']}: {job_post['Budget']}"
@@ -54,7 +87,7 @@ def message_printer(new_job_posts):
                 print(f"{job_post['Job Title']} – {job_post['Payment Type']}")
             print(job_post["URL"] + "\n")
     else:
-        for job_post in new_job_posts:
+        for job_post in selected_new_job_posts:
             print(job_post["Job Title"])
             if job_post["Payment Type"] == "Fixed-price":
                 print(job_post["Payment Type"] + " " + job_post["Budget"])
@@ -70,7 +103,9 @@ def json_difference_checker(json_content, job_post_list):
 
     old_job_urls = [job_post["URL"] for job_post in json_content["Job Posts"]]
 
-    new_job_posts = [job_post for job_post in job_post_list if job_post["URL"] not in old_job_urls]
+    new_job_posts = [
+        job_post for job_post in job_post_list if job_post["URL"] not in old_job_urls
+    ]
 
     message_printer(new_job_posts)
 
@@ -79,7 +114,8 @@ def job_post_scraper():
     """ Scrapes Upwork for job posts and stores details in variables """
     # TODO: Set url to input to let people use other searches. (Write it to json)
     # TODO: Control that input is valid upwork search link. (Regex library)
-    url = "https://www.upwork.com/ab/jobs/search/?q=(translator%20OR%20translation%20OR%20proofread)%20AND%20swedish&sort=recency"
+
+    url = "https://www.upwork.com/ab/jobs/search/?page=2&q=(translat%20OR%20proofread)%20AND%20swedish&sort=recency"
 
     connection_attempts = 0
 
@@ -90,9 +126,9 @@ def job_post_scraper():
                 headers={
                     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_1_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36"
                 },
-                timeout=3
+                timeout=3,
             ).text  # TODO: Figure out how to fetch User Agent on current system.
-        # html.raise_for_status()  # TODO: Find out why this doesn't work ("AttributeError: 'str' object has no attribute 'raise_for_status'")
+            # html.raise_for_status()  # TODO: Find out why this doesn't work ("AttributeError: 'str' object has no attribute 'raise_for_status'")
             break
         except requests.exceptions.HTTPError as errh:
             print("HTTP Error:", errh)
@@ -141,7 +177,9 @@ def job_post_scraper():
 
         job_post_list.append(job_post_dict)
 
-    json_difference_checker(read_from_json(job_post_list), job_post_list)  # TODO: Add conditional if json is empty (first time using the program)
+    json_difference_checker(
+        read_from_json(job_post_list), job_post_list
+    )
 
     if job_post_list:
         write_to_json(job_post_list)

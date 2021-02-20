@@ -3,17 +3,23 @@ from bs4 import BeautifulSoup
 import json
 import time
 
-# import re  # For looking for eventual word counts in job posts & controlling the validity of url input
+# import re  # For looking for eventual word counts in job posts & controlling the validity of url input.
+# Also needed for don't bother me rate
+
+# TODO: Program needs to log into Upwork when clicking job url
 
 
-def read_from_json():
+def read_from_json(job_post_list):
     """ Reads all the job posts from job_posts.json """
     try:  # Not sure if I need a try block
         with open("job_posts.json", "r") as job_posts_json:
             json_content = json.load(job_posts_json)
             return json_content
     except FileNotFoundError:
-        return
+        print("File not found – Attempting to create one.")
+        json_content = {"Job Posts": job_post_list}
+        return json_content
+        # TODO: Call function for running settings window
 
 
 def write_to_json(job_post_list):
@@ -61,8 +67,6 @@ def message_printer(new_job_posts):
 def json_difference_checker(json_content, job_post_list):
     """Controls where in the new webscrape the highest job post in json is,
     to check amount of new posts"""
-    # TODO: Add if json_content['Job Posts'][0]['URL'] not in job_post_list ->
-    # Use json_content['Job Posts'][1]['URL'] & index start at -1 (I think, so user don't get 1 extra job post as "new")
 
     old_job_urls = [job_post["URL"] for job_post in json_content["Job Posts"]]
 
@@ -73,8 +77,8 @@ def json_difference_checker(json_content, job_post_list):
 
 def job_post_scraper():
     """ Scrapes Upwork for job posts and stores details in variables """
-    # TODO: Set url to input to let people use other searches.
-    # TODO: Control that input is valid upwork search link.
+    # TODO: Set url to input to let people use other searches. (Write it to json)
+    # TODO: Control that input is valid upwork search link. (Regex library)
     url = "https://www.upwork.com/ab/jobs/search/?q=(translator%20OR%20translation%20OR%20proofread)%20AND%20swedish&sort=recency"
 
     connection_attempts = 0
@@ -137,7 +141,7 @@ def job_post_scraper():
 
         job_post_list.append(job_post_dict)
 
-    json_difference_checker(read_from_json(), job_post_list)  # TODO: Add conditional if json is empty (first time using the program)
+    json_difference_checker(read_from_json(job_post_list), job_post_list)  # TODO: Add conditional if json is empty (first time using the program)
 
     if job_post_list:
         write_to_json(job_post_list)

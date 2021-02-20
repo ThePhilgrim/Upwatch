@@ -117,33 +117,36 @@ def job_post_scraper():
 
     url = "https://www.upwork.com/ab/jobs/search/?page=2&q=(translat%20OR%20proofread)%20AND%20swedish&sort=recency"
 
-    connection_attempts = 0
+    connection_attempts = 1
 
-    while connection_attempts < 3:
+    while True:
         try:
-            html = requests.get(
+            response = requests.get(
                 url,
                 headers={
                     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_1_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36"
                 },
                 timeout=3,
-            ).text  # TODO: Figure out how to fetch User Agent on current system.
-            # html.raise_for_status()  # TODO: Find out why this doesn't work ("AttributeError: 'str' object has no attribute 'raise_for_status'")
+            )  # TODO: Figure out how to fetch User Agent on current system.
+            response.raise_for_status()  # TODO: Find out why this doesn't work ("AttributeError: 'str' object has no attribute 'raise_for_status'")
             break
         except requests.exceptions.HTTPError as errh:
             print("HTTP Error:", errh)
             print("Please try a different URL")
-        # except requests.exceptions.ConnectionError as errc:
-        #     print("Error Connecting:", errc)
-        #     print("Please check you internet connection and try again.")
-        #     return
+            return
+        except requests.exceptions.ConnectionError:
+            print("Error Connecting")
+            print("Please check you internet connection and try again.")
+            return
         except requests.exceptions.Timeout:
             print("Your request timed out.")
+            if connection_attempts == 3:
+                return
             time.sleep(30)
             print("Trying again...")
             connection_attempts += 1
 
-    soup = BeautifulSoup(html, "lxml")
+    soup = BeautifulSoup(response.text, "lxml")
 
     job_posts = soup.find_all("section", class_="air-card-hover")
 

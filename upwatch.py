@@ -12,17 +12,17 @@ import time
 class UserInput:
     def __init__(
         self,
-        url,
+        url=None,
         fixed_low_rate=None,
         hourly_low_rate=None,
-        username=None,
-        password=None,
+        # username=None,
+        # password=None,
     ):
         self.url = url
         self.fixed_low_rate = fixed_low_rate
         self.hourly_low_rate = hourly_low_rate
-        self.username = username
-        self.password = password
+        # self.username = username
+        # self.password = password  # TODO: Username and password will be implemented in the future to open a logged in Upwork
 
 
 #   !self.user_agent here ?????
@@ -137,12 +137,14 @@ def json_difference_checker(json_content, job_post_list):
     message_printer(new_job_posts)
 
 
-def job_post_scraper():
+def job_post_scraper(user_input):
     """ Scrapes Upwork for job posts and stores details in variables """
     # TODO: Set url to input to let people use other searches. (Write it to json)
     # TODO: Control that input is valid upwork search link. (Regex library)
     # TODO: Tell the user if there is no URL specified when trying to do request
-    url = "https://www.upwork.com/ab/jobs/search/?page=2&q=(translat%20OR%20proofread)%20AND%20swedish&sort=recency"
+    # url = "https://www.upwork.com/ab/jobs/search/?page=2&q=(translat%20OR%20proofread)%20AND%20swedish&sort=recency"
+
+    url = user_input.url
 
     connection_attempts = 1
 
@@ -210,4 +212,4 @@ def job_post_scraper():
         write_to_json(job_post_list)
 
 
-job_post_scraper()
+# job_post_scraper()  # TODO: Remove this when code is working

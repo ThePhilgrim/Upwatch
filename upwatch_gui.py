@@ -1,14 +1,20 @@
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
+import upwatch
 
 
 class UpwatchGui:
     def __init__(self):
+        self.user_input = upwatch.UserInput()
+
+        if self.user_input.url:
+            upwatch.job_post_scraper(self.user_input)
+
         self.app = QtWidgets.QApplication([])
         self.app.setQuitOnLastWindowClosed(False)
 
         # Create the icon
-        icon = QtGui.QIcon("uwlogo.png")
+        icon = QtGui.QIcon("uwlogo.png")  # TODO: Fix own logo
 
         # Create the tray
         self.tray = QtWidgets.QSystemTrayIcon()
@@ -44,10 +50,9 @@ class UpwatchGui:
         self.tray.setContextMenu(self.menu)
 
     def set_url(self):
-        print("URL SET!")
+        self.user_input.url = self.set_url_window.text()
+        upwatch.job_post_scraper(self.user_input)
         self.set_url_window.close()
-        # value = app.set_url_window.text()
-        return
 
     def set_url_window(self):
         self.set_url_window = QtWidgets.QLineEdit("Set URL")

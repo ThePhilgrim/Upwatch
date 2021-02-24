@@ -59,8 +59,15 @@ def extract_fixed_price(fixed_payment_type):
     # Accounts for job_post["Budget"] == "$1,234"
     if "," in fixed_payment_type:
         return int((fixed_payment_type).replace(",", "").lstrip("$"))
+    # Accounts for job_post["Budget"] == "$XK" or "$X.YK"
+    elif "K" in fixed_payment_type:
+        if "." in fixed_payment_type:
+            return int((float(fixed_payment_type.lstrip("$").rstrip("K"))) * 1000)
+        else:
+            return int(fixed_payment_type.lstrip("$").rstrip("K")) * 1000
     # Accounts for job_post["Budget"] == "$X"
-    return int(fixed_payment_type.lstrip("$"))
+    else:
+        return int(fixed_payment_type.lstrip("$"))
 
 
 def message_printer(new_job_posts):

@@ -4,11 +4,13 @@ import upwatch
 
 
 class UpwatchGui:
-    def __init__(self):
-        self.user_input = upwatch.UserInput()
+    def __init__(self, json_content):
+        self.json_content = json_content
+        # self.user_input = upwatch.UserInput(json_content["URL"], json_content["Fixed Lowest Rate"], json_content["Hourly Lowest Rate"])
 
-        if self.user_input.url:
-            upwatch.job_post_scraper(self.user_input)
+        if self.json_content["Requests URL"] is not None:
+            upwatch.job_post_scraper(self.json_content)  # self.user_input used as arg before
+            # TODO: If json_content["URL"] is None -> Run settings window
 
         self.app = QtWidgets.QApplication([])
         self.app.setQuitOnLastWindowClosed(False)
@@ -50,8 +52,8 @@ class UpwatchGui:
         self.tray.setContextMenu(self.menu)
 
     def set_url(self):
-        self.user_input.url = self.set_url_window.text()
-        upwatch.job_post_scraper(self.user_input)
+        self.json_content["Requests URL"] = self.set_url_window.text()
+        upwatch.job_post_scraper(self.json_content)  # self.user_input used as arg before
         self.set_url_window.close()
 
     def set_url_window(self):
@@ -73,5 +75,6 @@ class UpwatchGui:
         self.about_window.show()
 
 
-gui = UpwatchGui()
+json_content = upwatch.read_from_json()
+gui = UpwatchGui(json_content)
 gui.app.exec_()

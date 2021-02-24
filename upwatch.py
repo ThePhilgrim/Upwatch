@@ -4,31 +4,14 @@ import json
 import time
 
 # !import re  # For looking for eventual word counts in job posts & controlling the validity of url input.
-
-# TODO: Program needs to log into Upwork when clicking job url
-
-
-# Class will be used by the GUI to access logic variables.
-class UserInput:
-    def __init__(
-        self,
-        url=None,
-        fixed_low_rate=None,
-        hourly_low_rate=None,
-        # username=None,
-        # password=None,
-    ):
-        self.url = url
-        self.fixed_low_rate = fixed_low_rate
-        self.hourly_low_rate = hourly_low_rate
-        # self.username = username
-        # self.password = password  # TODO: Username and password will be implemented in the future to open a logged in Upwork
+# TODO: Username and password will be implemented in the future to open a logged in Upwork
 
 
-#   !self.user_agent here ?????
-
-
-def read_from_json(fallback_job_posts):
+# TODO: Add to json: user agent, username, password
+# Regarding password: "<Akuli> the only thing that comes to mind is first logging
+# in with browser, then sending the exact same headers (User-Agent and friends)
+# and cookies with request"
+def read_from_json():
     """ Reads all the job posts from job_posts.json """
     try:
         with open("job_posts.json", "r") as job_posts_json:
@@ -38,14 +21,23 @@ def read_from_json(fallback_job_posts):
         print(
             "File not found – Attempting to create one."
         )  # !Remove this when code is working properly.
-        json_content = {"Job Posts": fallback_job_posts}
+        json_content = {
+            "Requests URL": None,
+            "Fixed Lowest Rate": 0,
+            "Hourly Lowest Rate": 0,
+            "Job Posts": None,
+        }
         return json_content
-        # TODO: Call function for running settings window
 
 
-def write_to_json(job_post_list):
-    """ Writes the latest web scrape to job_posts.json """
-    json_dict = {"Job Posts": job_post_list}
+def write_to_json(job_post_list, json_content):
+    """ Writes the latest web scrape and UserInput data to job_posts.json """
+    json_dict = {
+        "Requests URL": json_content["Requests URL"],
+        "Fixed Lowest Rate": json_content["Fixed Lowest Rate"],
+        "Hourly Lowest Rate": json_content["Hourly Lowest Rate"],
+        "Job Posts": job_post_list,
+    }
     with open("job_posts.json", "w") as json_dump:
         json.dump(json_dict, json_dump, indent=4)
 
@@ -64,6 +56,9 @@ def extract_hourly_price(hourly_payment_type):
 
 def extract_fixed_price(fixed_payment_type):
     """ Returns the fixed price as int for message_printer() if-statement """
+    # Accounts for job_post["Budget"] == "$1,234"
+    if "," in fixed_payment_type:
+        return int((fixed_payment_type).replace(",", "").lstrip("$"))
     # Accounts for job_post["Budget"] == "$X"
     return int(fixed_payment_type.lstrip("$"))
 
@@ -71,14 +66,14 @@ def extract_fixed_price(fixed_payment_type):
 def message_printer(new_job_posts):
     """ Prints number of new jobs (that satisfy user budget criteria) & their details """
 
-    fixed_lowest_rate = 25
+    fixed_lowest_rate = 25  # TODO: Change this to json_content["Fixed Lowest Rate"]
 
-    hourly_lowest_rate = 0
+    hourly_lowest_rate = 0  # TODO: Change this to json_content["Hourly Lowest Rate"]
 
     selected_new_job_posts = []
 
     for job_post in new_job_posts:
-        # !print(job_post)  # Use this line to debug what job post might cause an error.
+        print(job_post)  # Use this line to debug what job post might cause an error.
         # job_post["Payment Type"] can be "Fixed-price", "Hourly: $X.00–$Y.00", or "Hourly"
         if (
             job_post["Payment Type"] == "Fixed-price"
@@ -112,7 +107,7 @@ def message_printer(new_job_posts):
                 )
             else:
                 print(f"{job_post['Job Title']} – {job_post['Payment Type']}")
-            print(job_post["URL"] + "\n")
+            print(job_post["Job Post URL"] + "\n")
     else:
         for job_post in selected_new_job_posts:
             print(job_post["Job Title"])
@@ -121,30 +116,30 @@ def message_printer(new_job_posts):
             else:
                 print(job_post["Payment Type"])
             print(job_post["Job Description"] + "...")
-            print(job_post["URL"] + "\n")
+            print(job_post["Job Post URL"] + "\n")
 
 
 def json_difference_checker(json_content, job_post_list):
     """Controls where in the new webscrape the highest job post in json is,
     to check amount of new posts"""
 
-    old_job_urls = [job_post["URL"] for job_post in json_content["Job Posts"]]
+    old_job_urls = [job_post["Job Post URL"] for job_post in json_content["Job Posts"]]
 
     new_job_posts = [
-        job_post for job_post in job_post_list if job_post["URL"] not in old_job_urls
+        job_post for job_post in job_post_list if job_post["Job Post URL"] not in old_job_urls
     ]
 
     message_printer(new_job_posts)
 
 
-def job_post_scraper(user_input):
+def job_post_scraper(json_content):
     """ Scrapes Upwork for job posts and stores details in variables """
     # TODO: Set url to input to let people use other searches. (Write it to json)
     # TODO: Control that input is valid upwork search link. (Regex library)
     # TODO: Tell the user if there is no URL specified when trying to do request
     # url = "https://www.upwork.com/ab/jobs/search/?page=2&q=(translat%20OR%20proofread)%20AND%20swedish&sort=recency"
 
-    url = user_input.url
+    url = json_content["Requests URL"]
 
     connection_attempts = 1
 
@@ -201,15 +196,18 @@ def job_post_scraper(user_input):
             "Payment Type": job_payment_type,
             "Budget": job_budget,
             "Job Description": job_description,
-            "URL": "https://upwork.com" + job_post_url,
+            "Job Post URL": "https://upwork.com" + job_post_url,
         }
 
         job_post_list.append(job_post_dict)
 
-    json_difference_checker(read_from_json(job_post_list), job_post_list)
+    if json_content["Job Posts"] is None:
+        json_content["Job Posts"] = job_post_list
+
+    json_difference_checker(json_content, job_post_list)
 
     if job_post_list:
-        write_to_json(job_post_list)
+        write_to_json(job_post_list, json_content)
 
 
 # job_post_scraper()  # TODO: Remove this when code is working

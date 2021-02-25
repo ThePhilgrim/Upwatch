@@ -4,7 +4,6 @@ import json
 import time
 
 # !import re  # For looking for eventual word counts in job posts & controlling the validity of url input.
-# TODO: Username and password will be implemented in the future to open a logged in Upwork
 
 
 # TODO: Add to json: user agent, username, password
@@ -18,9 +17,6 @@ def read_from_json():
             json_content = json.load(job_posts_json)
             return json_content
     except FileNotFoundError:
-        print(
-            "File not found – Attempting to create one."
-        )  # !Remove this when code is working properly.
         json_content = {
             "Requests URL": None,
             "Fixed Lowest Rate": 0,
@@ -80,7 +76,8 @@ def message_printer(new_job_posts):
     selected_new_job_posts = []
 
     for job_post in new_job_posts:
-        print(job_post)  # Use this line to debug what job post might cause an error.
+        # print(job_post)  # Use this line to debug what job post might cause an error. Keep for future debugging as well
+
         # job_post["Payment Type"] can be "Fixed-price", "Hourly: $X.00–$Y.00", or "Hourly"
         if (
             job_post["Payment Type"] == "Fixed-price"
@@ -141,12 +138,16 @@ def json_difference_checker(json_content, job_post_list):
 
 def job_post_scraper(json_content):
     """ Scrapes Upwork for job posts and stores details in variables """
-    # TODO: Set url to input to let people use other searches. (Write it to json)
     # TODO: Control that input is valid upwork search link. (Regex library)
     # TODO: Tell the user if there is no URL specified when trying to do request
-    # url = "https://www.upwork.com/ab/jobs/search/?page=2&q=(translat%20OR%20proofread)%20AND%20swedish&sort=recency"
+
+    # Translation URL for testing: https://www.upwork.com/ab/jobs/search/?page=2&q=(translat%20OR%20proofread)%20AND%20swedish&sort=recency
 
     url = json_content["Requests URL"]
+
+#       File "/Users/Writing/Documents/Python/Upwatch/env/lib/python3.9/site-packages/requests/models.py", line 390, in prepare_url
+#     raise MissingSchema(error)
+# requests.exceptions.MissingSchema: Invalid URL 'Set URL': No schema supplied. Perhaps you meant http://Set URL?
 
     connection_attempts = 1
 
@@ -215,6 +216,3 @@ def job_post_scraper(json_content):
 
     if job_post_list:
         write_to_json(job_post_list, json_content)
-
-
-# job_post_scraper()  # TODO: Remove this when code is working

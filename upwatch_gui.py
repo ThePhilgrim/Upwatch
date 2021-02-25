@@ -1,6 +1,8 @@
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
+from PyQt5 import QtCore
 import upwatch
+import time
 
 
 class UpwatchGui:
@@ -52,15 +54,21 @@ class UpwatchGui:
         self.tray.setContextMenu(self.menu)
 
     def set_url(self):
-        self.json_content["Requests URL"] = self.set_url_window.text()
+        self.json_content["Requests URL"] = self.line_edit.text()
         upwatch.job_post_scraper(self.json_content)  # self.user_input used as arg before
         self.set_url_window.close()
 
+    # TODO: Make sure set_url_window shows up under the Upwatch Icon!
     def set_url_window(self):
-        self.set_url_window = QtWidgets.QLineEdit("Set URL")
-        self.set_url_window.setGeometry(750, 50, 150, 50)
-        self.set_url_window.returnPressed.connect(lambda: self.set_url())
+        self.set_url_window = QtWidgets.QDialog()
+        self.line_edit = QtWidgets.QLineEdit("Paste Upwork URL Here", self.set_url_window)
+        # self.set_url_window = QtWidgets.QLineEdit("Paste your URL here")
+        self.set_url_window.setGeometry(750, 0, 200, 30)
+        self.line_edit.resize(200, 30)
+        self.line_edit.returnPressed.connect(lambda: self.set_url())
+        self.set_url_window.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint)
         self.set_url_window.show()
+        # TODO: Add "QRegexpValidator − Checks input against a Regex expression"
 
     def settings_window(self):
         self.settings_window = QtWidgets.QWidget()
@@ -71,7 +79,15 @@ class UpwatchGui:
     def about_window(self):
         self.about_window = QtWidgets.QWidget()
         self.about_window.setWindowTitle("About")
-        # self.about_window.setGeometry(X, Y, X2, Y2)
+        self.about_window.setGeometry(300, 300, 300, 300)
+
+        about_label = QtWidgets.QLabel(self.about_window)
+        about_label.setText("Created by The Philgrim")
+        about_label.move(75, 80)
+
+        about_button = QtWidgets.QPushButton(self.about_window)
+        about_button.setText("Click Here Right Now!")
+        about_button.move(65, 105)
         self.about_window.show()
 
 

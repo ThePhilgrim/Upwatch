@@ -54,18 +54,20 @@ class UpwatchGui:
         self.tray.setContextMenu(self.menu)
 
     def set_url(self):
-        self.json_content["Requests URL"] = self.line_edit.text()
+        self.json_content["Requests URL"] = self.paste_url.text()
         upwatch.job_post_scraper(self.json_content)  # self.user_input used as arg before
         self.set_url_window.close()
 
     # TODO: Make sure set_url_window shows up under the Upwatch Icon!
     def set_url_window(self):
         self.set_url_window = QtWidgets.QDialog()
-        self.line_edit = QtWidgets.QLineEdit("Paste Upwork URL Here", self.set_url_window)
+        self.paste_url = QtWidgets.QLineEdit(self.set_url_window)
+        self.paste_url.setPlaceholderText("Paste Valid Upwork URL here")
         # self.set_url_window = QtWidgets.QLineEdit("Paste your URL here")
         self.set_url_window.setGeometry(750, 0, 200, 30)
-        self.line_edit.resize(200, 30)
-        self.line_edit.returnPressed.connect(lambda: self.set_url())
+        self.paste_url.resize(200, 30)
+        # self.set_url_window.QtWidgets.setCentralWidget(self.paste_url)  # TODO: FIX THIS INSTEAD OF RESIZE ON PREVIOUS LINE
+        self.paste_url.returnPressed.connect(lambda: self.set_url())
         self.set_url_window.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint)
         self.set_url_window.show()
         # TODO: Add "QRegexpValidator − Checks input against a Regex expression"
@@ -73,7 +75,56 @@ class UpwatchGui:
     def settings_window(self):
         self.settings_window = QtWidgets.QWidget()
         self.settings_window.setWindowTitle("Settings")
-        # self.settings_window.setGeometry(X, Y, X2, Y2)
+        self.settings_window.resize(340, 240)
+
+        # URL Text Input label
+        self.settings_label_url = QtWidgets.QLabel(self.settings_window)
+        self.settings_label_url.setText("Paste Upwork URL Here")
+        self.settings_label_url.setGeometry(QtCore.QRect(25, 20, 161, 16))
+
+        # URL Text Input Box
+        self.settings_line_edit = QtWidgets.QLineEdit(self.settings_window)
+        self.settings_line_edit.setGeometry(QtCore.QRect(25, 45, 290, 21))
+        self.settings_line_edit.setPlaceholderText("https://www.upwork.com/...")
+        self.settings_line_edit.setToolTip("""Apply appropriate filters for your job on Upwork
+and paste the URL from the browser (Must be a valid Upwork link)""")
+
+        # Separator line
+        self.separator = QtWidgets.QFrame(self.settings_window)
+        self.separator.setFrameShape(QtWidgets.QFrame.HLine)
+        self.separator.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.separator.setGeometry(QtCore.QRect(25, 100, 290, 10))
+
+        # Don't Bother Me Rate groupBox
+        self.low_rate_groupbox = QtWidgets.QGroupBox(self.settings_window)
+        self.low_rate_groupbox.setGeometry(QtCore.QRect(10, 130, 320, 91))
+        self.low_rate_groupbox.setFlat(True)
+        self.low_rate_groupbox.setCheckable(True)
+        self.low_rate_groupbox.setChecked(False)
+        self.low_rate_groupbox.setTitle("Don\'t-Bother-Me Rate")
+        self.low_rate_groupbox.setToolTip("Job posts with a budget lower than your set\nvalue will not trigger a notification.")
+
+        # Don't Bother Me Rate Input Boxes
+        # Fixed
+        self.fixed_low_rate_label = QtWidgets.QLabel(self.low_rate_groupbox)
+        self.fixed_low_rate_label.setGeometry(QtCore.QRect(20, 40, 91, 16))
+        self.fixed_low_rate_label.setText("Fixed-price")
+        self.fixed_low_rate = QtWidgets.QLineEdit(self.low_rate_groupbox)
+        self.fixed_low_rate.setGeometry(QtCore.QRect(20, 60, 113, 21))
+        self.fixed_low_rate.setPlaceholderText("e.g.  120")
+        self.fixed_low_rate.setClearButtonEnabled(True)
+        self.fixed_low_rate.setToolTip("Any fixed-price job post paying less than your set value will be ignored.")
+
+        # Hourly
+        self.hourly_low_rate_label = QtWidgets.QLabel(self.low_rate_groupbox)
+        self.hourly_low_rate_label.setGeometry(QtCore.QRect(180, 40, 60, 16))
+        self.hourly_low_rate_label.setText("Hourly")
+        self.hourly_low_rate = QtWidgets.QLineEdit(self.low_rate_groupbox)
+        self.hourly_low_rate.setGeometry(QtCore.QRect(180, 60, 113, 21))
+        self.hourly_low_rate.setPlaceholderText("e.g.  35")
+        self.hourly_low_rate.setClearButtonEnabled(True)
+        self.hourly_low_rate.setToolTip("Any hourly contract paying less than your set value will be ignored.")
+
         self.settings_window.show()
 
     def about_window(self):

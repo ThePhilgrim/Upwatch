@@ -75,12 +75,24 @@ class UpwatchGui:
         qline.setCursorPosition(0)
 
     def set_dbmr_state(self):
-        if json_content["DBMR"] is False:
-            json_content["DBMR"] = True
+        if self.json_content["DBMR"] is False:
+            self.json_content["DBMR"] = True
         else:
-            json_content["DBMR"] = False
-            json_content["Fixed Lowest Rate"] = 0
-            json_content["Hourly Lowest Rate"] = 0
+            self.json_content["DBMR"] = False
+            self.json_content["Fixed Lowest Rate"] = 0
+            self.json_content["Hourly Lowest Rate"] = 0
+
+    def set_dbmr_fixed(self):
+        if len(self.fixed_low_rate.text()) > 0:
+            self.json_content["Fixed Lowest Rate"] = self.fixed_low_rate.text()
+        else:
+            self.json_content["Fixed Lowest Rate"] = 0
+
+    def set_dbmr_hourly(self):
+        if len(self.hourly_low_rate.text()) > 0:
+            self.json_content["Hourly Lowest Rate"] = self.hourly_low_rate.text()
+        else:
+            self.json_content["Hourly Lowest Rate"] = 0
 
     def close_program(self):
         upwatch.write_to_json(self.json_content)
@@ -155,10 +167,13 @@ and paste the URL from the browser (Must be a valid Upwork link)"""
         self.fixed_low_rate = QtWidgets.QLineEdit(self.low_rate_groupbox)
         self.fixed_low_rate.setGeometry(QtCore.QRect(20, 60, 113, 21))
         self.fixed_low_rate.setPlaceholderText("e.g.  120")
+        if self.json_content["Fixed Lowest Rate"] != 0:
+            self.fixed_low_rate.setText(self.json_content["Fixed Lowest Rate"])
         self.fixed_low_rate.setClearButtonEnabled(True)
         self.fixed_low_rate.setToolTip(
             "Any fixed-price job post paying less than your set value will be ignored."
         )
+        self.fixed_low_rate.returnPressed.connect(self.set_dbmr_fixed)
 
         # Hourly
         self.hourly_low_rate_label = QtWidgets.QLabel(self.low_rate_groupbox)
@@ -167,10 +182,13 @@ and paste the URL from the browser (Must be a valid Upwork link)"""
         self.hourly_low_rate = QtWidgets.QLineEdit(self.low_rate_groupbox)
         self.hourly_low_rate.setGeometry(QtCore.QRect(180, 60, 113, 21))
         self.hourly_low_rate.setPlaceholderText("e.g.  35")
+        if self.json_content["Hourly Lowest Rate"] != 0:
+            self.hourly_low_rate.setText(self.json_content["Hourly Lowest Rate"])
         self.hourly_low_rate.setClearButtonEnabled(True)
         self.hourly_low_rate.setToolTip(
             "Any hourly contract paying less than your set value will be ignored."
         )
+        self.hourly_low_rate.returnPressed.connect(self.set_dbmr_hourly)
 
         self.settings_window.show()
 

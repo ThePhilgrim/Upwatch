@@ -68,12 +68,12 @@ def extract_fixed_price(fixed_payment_type):
         return int(fixed_payment_type.lstrip("$"))
 
 
-def message_printer(new_job_posts):
+def message_printer(json_content, new_job_posts):
     """ Prints number of new jobs (that satisfy user budget criteria) & their details """
 
-    fixed_lowest_rate = 25  # TODO: Change this to json_content["Fixed Lowest Rate"]
+    fixed_lowest_rate = json_content["Fixed Lowest Rate"]
 
-    hourly_lowest_rate = 0  # TODO: Change this to json_content["Hourly Lowest Rate"]
+    hourly_lowest_rate = json_content["Hourly Lowest Rate"]
 
     selected_new_job_posts = []
 
@@ -137,7 +137,7 @@ def json_difference_checker(json_content, job_post_list):
         if job_post["Job Post URL"] not in old_job_urls
     ]
 
-    message_printer(new_job_posts)
+    message_printer(json_content, new_job_posts)
 
 
 def job_post_scraper(json_content):

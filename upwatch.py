@@ -19,6 +19,7 @@ def read_from_json():
     except FileNotFoundError:
         json_content = {
             "Requests URL": None,
+            "DBMR": False,
             "Fixed Lowest Rate": 0,
             "Hourly Lowest Rate": 0,
             "Job Posts": None,
@@ -26,13 +27,14 @@ def read_from_json():
         return json_content
 
 
-def write_to_json(job_post_list, json_content):
+def write_to_json(json_content):
     """ Writes the latest web scrape and UserInput data to job_posts.json """
     json_dict = {
         "Requests URL": json_content["Requests URL"],
+        "DBMR": json_content["DBMR"],
         "Fixed Lowest Rate": json_content["Fixed Lowest Rate"],
         "Hourly Lowest Rate": json_content["Hourly Lowest Rate"],
-        "Job Posts": job_post_list,
+        "Job Posts": json_content["Job Posts"],
     }
     with open("job_posts.json", "w") as json_dump:
         json.dump(json_dict, json_dump, indent=4)
@@ -130,7 +132,9 @@ def json_difference_checker(json_content, job_post_list):
     old_job_urls = [job_post["Job Post URL"] for job_post in json_content["Job Posts"]]
 
     new_job_posts = [
-        job_post for job_post in job_post_list if job_post["Job Post URL"] not in old_job_urls
+        job_post
+        for job_post in job_post_list
+        if job_post["Job Post URL"] not in old_job_urls
     ]
 
     message_printer(new_job_posts)
@@ -145,9 +149,9 @@ def job_post_scraper(json_content):
 
     url = json_content["Requests URL"]
 
-#       File "/Users/Writing/Documents/Python/Upwatch/env/lib/python3.9/site-packages/requests/models.py", line 390, in prepare_url
-#     raise MissingSchema(error)
-# requests.exceptions.MissingSchema: Invalid URL 'Set URL': No schema supplied. Perhaps you meant http://Set URL?
+    #       File "/Users/Writing/Documents/Python/Upwatch/env/lib/python3.9/site-packages/requests/models.py", line 390, in prepare_url
+    #     raise MissingSchema(error)
+    # requests.exceptions.MissingSchema: Invalid URL 'Set URL': No schema supplied. Perhaps you meant http://Set URL?
 
     connection_attempts = 1
 
@@ -213,6 +217,3 @@ def job_post_scraper(json_content):
         json_content["Job Posts"] = job_post_list
 
     json_difference_checker(json_content, job_post_list)
-
-    if job_post_list:
-        write_to_json(job_post_list, json_content)

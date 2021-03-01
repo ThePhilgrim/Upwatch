@@ -14,7 +14,7 @@ class UpwatchGui:
         if self.json_content["Requests URL"] is not None:
             upwatch.job_post_scraper(
                 self.json_content
-            )  # self.user_input used as arg before
+            )
             # TODO: If json_content["URL"] is None -> Run settings window
 
         # Main Application
@@ -57,6 +57,10 @@ class UpwatchGui:
 
         # Add the menu to the tray
         self.tray.setContextMenu(self.menu)
+
+        # Launches settings window on program start if no Requests URL is defined.
+        if self.json_content["Requests URL"] is None:
+            self.settings_window()
 
     # Accepts user input URL and calls logic  # TODO: Add settings window url box to this method
     def set_url(self, window, close_window=False):

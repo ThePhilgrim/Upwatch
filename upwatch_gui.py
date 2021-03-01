@@ -177,7 +177,7 @@ and paste the URL from the browser (Must be a valid Upwork link)"""
         self.fixed_low_rate.setToolTip(
             "Any fixed-price job post paying less than your set value will be ignored."
         )
-        self.fixed_low_rate.returnPressed.connect(self.set_dbmr_fixed)
+        self.fixed_low_rate.textChanged.connect(self.set_dbmr_fixed)
 
         # Hourly
         self.hourly_low_rate_label = QtWidgets.QLabel(self.low_rate_groupbox)
@@ -192,7 +192,7 @@ and paste the URL from the browser (Must be a valid Upwork link)"""
         self.hourly_low_rate.setToolTip(
             "Any hourly contract paying less than your set value will be ignored."
         )
-        self.hourly_low_rate.returnPressed.connect(self.set_dbmr_hourly)
+        self.hourly_low_rate.textChanged.connect(self.set_dbmr_hourly)
 
         self.settings_window.show()
 

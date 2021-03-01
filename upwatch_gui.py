@@ -1,6 +1,7 @@
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
+from threading import Thread
 import upwatch
 # import time
 
@@ -12,9 +13,7 @@ class UpwatchGui:
 
         # Calling the logic
         if self.json_content["Requests URL"] is not None:
-            upwatch.job_post_scraper(
-                self.json_content
-            )
+            Thread(target=upwatch.job_post_scraper(self.json_content)).start()
             # TODO: If json_content["URL"] is None -> Run settings window
 
         # Main Application
@@ -66,9 +65,7 @@ class UpwatchGui:
     def set_url(self, window, close_window=False):
         # TODO: VALIDITY CHECK - CHECK QT DESIGNER WIDGET
         self.json_content["Requests URL"] = window.text()
-        upwatch.job_post_scraper(
-            self.json_content
-        )
+        Thread(target=upwatch.job_post_scraper(self.json_content)).start()
         if close_window:
             self.set_url_window.close()
 

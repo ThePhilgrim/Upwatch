@@ -1,7 +1,8 @@
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
-from threading import Thread
+import threading
+import time
 import upwatch
 # import time
 
@@ -10,11 +11,6 @@ class UpwatchGui:
     def __init__(self, json_content):
         # JSON Dict with URL, Don't Bother Me Rate, Job Posts
         self.json_content = json_content
-
-        # Calling the logic
-        if self.json_content["Requests URL"] is not None:
-            Thread(target=upwatch.job_post_scraper(self.json_content)).start()
-            # TODO: If json_content["URL"] is None -> Run settings window
 
         # Main Application
         self.app = QtWidgets.QApplication([])
@@ -60,12 +56,14 @@ class UpwatchGui:
         # Launches settings window on program start if no Requests URL is defined.
         if self.json_content["Requests URL"] is None:
             self.settings_window()
+        else:
+            self.scrape_loop()
 
     # Accepts user input URL and calls logic  # TODO: Add settings window url box to this method
     def set_url(self, window, close_window=False):
         # TODO: VALIDITY CHECK - CHECK QT DESIGNER WIDGET
         self.json_content["Requests URL"] = window.text()
-        Thread(target=upwatch.job_post_scraper(self.json_content)).start()
+        self.scrape_loop()
         if close_window:
             self.set_url_window.close()
 
@@ -74,6 +72,15 @@ class UpwatchGui:
         qline.setToolTip(self.json_content["Requests URL"])
         qline.setText(self.json_content["Requests URL"])
         qline.setCursorPosition(0)
+
+    def scrape_loop(self):
+        while True:
+            self.sleep_time = 2
+            print("CALLING SCRAPER")
+            threading.Thread(target=upwatch.job_post_scraper(self.json_content)).start()
+            print("SCRAPER CALLED. NOW WAITING...")
+            time.sleep(self.sleep_time * 60)
+            print("SLEEP OVER! BACK TO BUSINESS!")
 
     def set_dbmr_state(self):
         if self.json_content["DBMR"] is False:

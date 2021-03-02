@@ -42,7 +42,6 @@ def write_to_json(json_content):
 
 def extract_hourly_price(hourly_payment_type):
     """ Returns the hourly payment as int for message_printer() if-statement """
-    # TODO: Put in try block and return empty string if error?
     if "-" in hourly_payment_type:
         # Accounts for job_post["Payment Type"] == "Hourly: $X.00–$Y.00"
         # Looking at the $Y to account for the payment range.
@@ -139,6 +138,8 @@ def json_difference_checker(json_content, job_post_list):
 
     message_printer(json_content, new_job_posts)
 
+    json_content["Job Posts"] = job_post_list
+
 
 def job_post_scraper(json_content):
     """ Scrapes Upwork for job posts and stores details in variables """
@@ -217,3 +218,15 @@ def job_post_scraper(json_content):
         json_content["Job Posts"] = job_post_list
 
     json_difference_checker(json_content, job_post_list)
+
+
+def scrape_loop(json_content):
+    while json_content["Requests URL"] is None:
+        time.sleep(0.5)  # wait for url to be entered
+    sleep_time = 30  # TODO: json_content["Sleep Time"] * 60
+    while True:
+        print("Calling job_post_scraper")
+        job_post_scraper(json_content)
+        print("Scraper has run. Time to sleep!")
+        time.sleep(sleep_time)
+        print("Waking up, back to business!")

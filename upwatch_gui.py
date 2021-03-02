@@ -57,7 +57,7 @@ class UpwatchGui:
 
         self.start_logic_thread()
 
-    # Accepts user input URL and calls logic
+    # Accepts user input URL
     def set_url(self, window, close_window=False):
         # TODO: VALIDITY CHECK - CHECK QT DESIGNER WIDGET
         self.json_content["Requests URL"] = window.text()
@@ -71,7 +71,6 @@ class UpwatchGui:
         qline.setCursorPosition(0)
 
     def start_logic_thread(self):
-        # TODO: Make sure that if function already running, don't run it directly upon pasting new url.
         threading.Thread(target=upwatch.scrape_loop, args=[json_content], daemon=True).start()
 
     def set_dbmr_state(self):

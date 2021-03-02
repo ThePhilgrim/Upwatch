@@ -4,7 +4,6 @@ from PyQt5 import QtCore
 import threading
 import time
 import upwatch
-# import time
 
 
 class UpwatchGui:
@@ -41,7 +40,6 @@ class UpwatchGui:
         self.actions.append(about_action)
 
         # Add a Quit option to the menu.
-        # TODO: Call write_to_json before closing the program – Remove writing from job_post_scraper
         quit_action = QtWidgets.QAction("Quit")
         quit_action.triggered.connect(self.close_program)
         self.actions.append(quit_action)
@@ -57,13 +55,13 @@ class UpwatchGui:
         if self.json_content["Requests URL"] is None:
             self.settings_window()
         else:
-            self.scrape_loop()
+            self.logic_thread()
 
-    # Accepts user input URL and calls logic  # TODO: Add settings window url box to this method
+    # Accepts user input URL and calls logic
     def set_url(self, window, close_window=False):
         # TODO: VALIDITY CHECK - CHECK QT DESIGNER WIDGET
         self.json_content["Requests URL"] = window.text()
-        self.scrape_loop()
+        self.logic_thread()
         if close_window:
             self.set_url_window.close()
 
@@ -73,14 +71,9 @@ class UpwatchGui:
         qline.setText(self.json_content["Requests URL"])
         qline.setCursorPosition(0)
 
-    def scrape_loop(self):
-        while True:
-            self.sleep_time = 2
-            print("CALLING SCRAPER")
-            threading.Thread(target=upwatch.job_post_scraper(self.json_content)).start()
-            print("SCRAPER CALLED. NOW WAITING...")
-            time.sleep(self.sleep_time * 60)
-            print("SLEEP OVER! BACK TO BUSINESS!")
+    def logic_thread(self):
+        # TODO: Make sure that if function already running, don't run it directly upon pasting new url.
+        threading.Thread(target=upwatch.scrape_loop, args=[json_content], daemon=True).start()
 
     def set_dbmr_state(self):
         if self.json_content["DBMR"] is False:

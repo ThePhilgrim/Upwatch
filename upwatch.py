@@ -138,6 +138,8 @@ def json_difference_checker(json_content, job_post_list):
 
     message_printer(json_content, new_job_posts)
 
+    json_content["Job Posts"] = job_post_list
+
 
 def job_post_scraper(json_content):
     """ Scrapes Upwork for job posts and stores details in variables """
@@ -219,6 +221,8 @@ def job_post_scraper(json_content):
 
 
 def scrape_loop(json_content):
+    while json_content["Requests URL"] is None:
+        time.sleep(0.5)
     sleep_time = 30  # TODO: json_content["Sleep Time"] * 60
     while True:
         print("Calling job_post_scraper")

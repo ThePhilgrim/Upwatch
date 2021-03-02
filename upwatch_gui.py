@@ -54,14 +54,13 @@ class UpwatchGui:
         # Launches settings window on program start if no Requests URL is defined.
         if self.json_content["Requests URL"] is None:
             self.settings_window()
-        else:
-            self.logic_thread()
+
+        self.start_logic_thread()
 
     # Accepts user input URL and calls logic
     def set_url(self, window, close_window=False):
         # TODO: VALIDITY CHECK - CHECK QT DESIGNER WIDGET
         self.json_content["Requests URL"] = window.text()
-        self.logic_thread()
         if close_window:
             self.set_url_window.close()
 
@@ -71,7 +70,7 @@ class UpwatchGui:
         qline.setText(self.json_content["Requests URL"])
         qline.setCursorPosition(0)
 
-    def logic_thread(self):
+    def start_logic_thread(self):
         # TODO: Make sure that if function already running, don't run it directly upon pasting new url.
         threading.Thread(target=upwatch.scrape_loop, args=[json_content], daemon=True).start()
 

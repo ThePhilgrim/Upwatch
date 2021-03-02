@@ -222,7 +222,7 @@ def job_post_scraper(json_content):
 
 def scrape_loop(json_content):
     while json_content["Requests URL"] is None:
-        time.sleep(0.5)
+        time.sleep(0.5)  # wait for url to be entered
     sleep_time = 30  # TODO: json_content["Sleep Time"] * 60
     while True:
         print("Calling job_post_scraper")

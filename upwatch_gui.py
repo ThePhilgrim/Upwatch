@@ -54,9 +54,8 @@ class UpwatchGui:
         if self.json_content["Requests URL"] is None:
             self.settings_window()
 
-        # self.start_logic_thread()
-
-        self.settings_window()
+        # Comment out when testing code:
+        self.start_logic_thread()
 
     # Accepts user input URL
     def set_url(self, window, close_window=False):
@@ -75,6 +74,15 @@ class UpwatchGui:
         threading.Thread(
             target=upwatch.scrape_loop, args=[json_content], daemon=True
         ).start()
+
+    def set_startup_state(self):
+        if self.json_content["Run on startup"] is True:
+            self.json_content["Run on startup"] = False
+        else:
+            self.json_content["Run on startup"] = True
+
+    def set_scrape_interval(self):
+        self.json_content["Scrape interval"] = self.scrape_interval.currentText()
 
     def set_dbmr_state(self):
         if self.json_content["DBMR"] is False:
@@ -95,6 +103,12 @@ class UpwatchGui:
             self.json_content["Hourly Lowest Rate"] = self.hourly_low_rate.text()
         else:
             self.json_content["Hourly Lowest Rate"] = 0
+
+    def set_ignore_no_budget(self):
+        if self.json_content["Ignore no budget"] is False:
+            self.json_content["Ignore no budget"] = True
+        else:
+            self.json_content["Ignore no budget"] = False
 
     def close_program(self):
         upwatch.write_to_json(self.json_content)
@@ -144,7 +158,7 @@ and paste the URL from the browser (Must be a valid Upwork link)"""
         self.settings_line_edit.setPlaceholderText("https://www.upwork.com/...")
         if self.json_content["Requests URL"] is not None:
             self.print_url_qline(self.settings_line_edit)
-        self.settings_line_edit.returnPressed.connect(
+        self.settings_line_edit.textChanged.connect(
             lambda: self.set_url(self.settings_line_edit)
         )
 
@@ -162,8 +176,11 @@ and paste the URL from the browser (Must be a valid Upwork link)"""
         self.run_on_startup.setText("Run Upwatch on system startup")
         self.run_on_startup.adjustSize()
         self.run_on_startup.setChecked(
-            True
-        )  # TODO: Add "Are you sure"-dialog if unchecked
+            json_content["Run on startup"]
+        )
+        self.run_on_startup.toggled.connect(self.set_startup_state)
+
+        # TODO: Add "Are you sure"-dialog if unchecked
 
         # Set scraping interval
         self.scrape_interval_label = QtWidgets.QLabel(self.settings_window)
@@ -173,6 +190,8 @@ and paste the URL from the browser (Must be a valid Upwork link)"""
         self.scrape_interval_label.adjustSize()
         self.scrape_interval = QtWidgets.QComboBox(self.settings_window)
         self.scrape_interval.addItems(["10", "15", "20", "30", "45", "60"])
+        self.scrape_interval.setCurrentText(str(json_content["Scrape interval"]))
+        self.scrape_interval.currentIndexChanged.connect(self.set_scrape_interval)
 
         # Don't Bother Me Rate groupBox
         self.low_rate_groupbox = QtWidgets.QGroupBox(self.settings_window)
@@ -216,12 +235,15 @@ and paste the URL from the browser (Must be a valid Upwork link)"""
         self.hourly_low_rate.textChanged.connect(self.set_dbmr_hourly)
 
         # Ignore Posts without budget/rate Checkbox
-        self.ignore_no_budgets = QtWidgets.QCheckBox(self.low_rate_groupbox)
-        self.ignore_no_budgets.setText(
+        self.ignore_no_budget = QtWidgets.QCheckBox(self.low_rate_groupbox)
+        self.ignore_no_budget.setText(
             "Don't show me job posts without a specified \nbudget/hourly rate"
         )
-        self.ignore_no_budgets.adjustSize()
+        self.ignore_no_budget.adjustSize()
+        self.ignore_no_budget.setChecked(json_content["Ignore no budget"])
+        self.ignore_no_budget.toggled.connect(self.set_ignore_no_budget)
 
+        # Add widgets to grid layout
         grid.addWidget(
             self.settings_label_url, 0, 0, alignment=QtCore.Qt.AlignLeft
         )
@@ -237,7 +259,7 @@ and paste the URL from the browser (Must be a valid Upwork link)"""
         low_rate_grid.addWidget(self.fixed_low_rate, 1, 0)
         low_rate_grid.addWidget(self.hourly_low_rate_label, 0, 1, alignment=QtCore.Qt.AlignBottom)
         low_rate_grid.addWidget(self.hourly_low_rate, 1, 1)
-        low_rate_grid.addWidget(self.ignore_no_budgets, 2, 0, 1, 2)
+        low_rate_grid.addWidget(self.ignore_no_budget, 2, 0, 1, 2)
 
         self.settings_window.show()
 

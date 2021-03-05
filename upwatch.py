@@ -19,9 +19,12 @@ def read_from_json():
     except FileNotFoundError:
         json_content = {
             "Requests URL": None,
+            "Run on startup": True,
+            "Scrape interval": 15,
             "DBMR": False,
             "Fixed Lowest Rate": 0,
             "Hourly Lowest Rate": 0,
+            "Ignore no budget": False,
             "Job Posts": None,
         }
         return json_content
@@ -31,9 +34,12 @@ def write_to_json(json_content):
     """ Writes the latest web scrape and UserInput data to job_posts.json """
     json_dict = {
         "Requests URL": json_content["Requests URL"],
+        "Run on startup": json_content["Run on startup"],
+        "Scrape interval": json_content["Scrape interval"],
         "DBMR": json_content["DBMR"],
         "Fixed Lowest Rate": json_content["Fixed Lowest Rate"],
         "Hourly Lowest Rate": json_content["Hourly Lowest Rate"],
+        "Ignore no budget": json_content["Ignore no budget"],
         "Job Posts": json_content["Job Posts"],
     }
     with open("job_posts.json", "w") as json_dump:
@@ -224,10 +230,7 @@ def job_post_scraper(json_content):
 def scrape_loop(json_content):
     while json_content["Requests URL"] is None:
         time.sleep(0.5)  # wait for url to be entered
-    sleep_time = 30  # TODO: json_content["Sleep Time"] * 60
     while True:
-        print("Calling job_post_scraper")
+        sleep_time = int(json_content["Scrape interval"])
         job_post_scraper(json_content)
-        print("Scraper has run. Time to sleep!")
         time.sleep(sleep_time)
-        print("Waking up, back to business!")

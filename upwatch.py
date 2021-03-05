@@ -79,6 +79,7 @@ def message_printer(json_content, new_job_posts):
     for job_post in new_job_posts:
         # print(job_post)  # Use this line to debug what job post might cause an error. Keep for future debugging as well
 
+        # TODO: If "placeholder" in job description, print it even if less than DBMR
         # job_post["Payment Type"] can be "Fixed-price", "Hourly: $X.00–$Y.00", or "Hourly"
         if (
             job_post["Payment Type"] == "Fixed-price"
@@ -200,7 +201,7 @@ def job_post_scraper(json_content):
         else:
             job_budget = ""
 
-        job_description = job_post.find("span", class_="js-description-text").text[:150]
+        job_description = job_post.find("span", class_="js-description-text").text[:150]  # TODO: Change this so whole description is included, but :150 is printed
 
         job_post_url = job_post.find("a", class_="job-title-link").attrs["href"]
 

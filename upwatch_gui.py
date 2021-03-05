@@ -56,6 +56,8 @@ class UpwatchGui:
 
         # self.start_logic_thread()
 
+        self.settings_window()
+
     # Accepts user input URL
     def set_url(self, window, close_window=False):
         # TODO: VALIDITY CHECK - CHECK QT DESIGNER WIDGET
@@ -70,7 +72,9 @@ class UpwatchGui:
         qline.setCursorPosition(0)
 
     def start_logic_thread(self):
-        threading.Thread(target=upwatch.scrape_loop, args=[json_content], daemon=True).start()
+        threading.Thread(
+            target=upwatch.scrape_loop, args=[json_content], daemon=True
+        ).start()
 
     def set_dbmr_state(self):
         if self.json_content["DBMR"] is False:
@@ -103,7 +107,6 @@ class UpwatchGui:
         self.set_url_window = QtWidgets.QDialog()
         self.paste_url = QtWidgets.QLineEdit(self.set_url_window)
         self.paste_url.setPlaceholderText("Paste Valid Upwork URL here")
-        # self.set_url_window = QtWidgets.QLineEdit("Paste your URL here")
         self.set_url_window.setGeometry(750, 0, 200, 30)
         self.paste_url.resize(200, 30)
         # self.set_url_window.QtWidgets.setCentralWidget(self.paste_url)  # TODO: FIX THIS INSTEAD OF RESIZE ON PREVIOUS LINE
@@ -117,19 +120,20 @@ class UpwatchGui:
         # TODO: Add "QRegexpValidator − Checks input against a Regex expression"
 
     # TODO: Add to settings window:
-    # 1) How ofter to run Scraper
-    # 2) Igore posts that don't have specified budget/rate
+    # 1) How often to run Scraper
+    # 2) Ignore posts that don't have specified budget/rate
     # 3) Run program on start up
     # Settings Window  # TODO: Add "open upwatch on system startup option (default True)"
     def settings_window(self):
         self.settings_window = QtWidgets.QWidget()
-        self.settings_window.setWindowTitle("Settings")
-        self.settings_window.resize(340, 380)
+        # self.settings_window.adjustSize()
+
+        grid = QtWidgets.QGridLayout()
+        self.settings_window.setLayout(grid)
 
         # URL Text Input label
         self.settings_label_url = QtWidgets.QLabel(self.settings_window)
         self.settings_label_url.setText("Paste Upwork URL Here")
-        self.settings_label_url.setGeometry(QtCore.QRect(25, 20, 161, 16))
         self.settings_label_url.setToolTip(
             """Apply appropriate filters for your job on Upwork
 and paste the URL from the browser (Must be a valid Upwork link)"""
@@ -137,42 +141,41 @@ and paste the URL from the browser (Must be a valid Upwork link)"""
 
         # URL Text Input Box
         self.settings_line_edit = QtWidgets.QLineEdit(self.settings_window)
-        self.settings_line_edit.setGeometry(QtCore.QRect(25, 45, 290, 21))
         self.settings_line_edit.setPlaceholderText("https://www.upwork.com/...")
         if self.json_content["Requests URL"] is not None:
             self.print_url_qline(self.settings_line_edit)
-        self.settings_line_edit.returnPressed.connect(lambda: self.set_url(self.settings_line_edit))
+        self.settings_line_edit.returnPressed.connect(
+            lambda: self.set_url(self.settings_line_edit)
+        )
 
         # Separator lines
         self.separator = QtWidgets.QFrame(self.settings_window)
         self.separator.setFrameShape(QtWidgets.QFrame.HLine)
         self.separator.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.separator.setGeometry(QtCore.QRect(25, 100, 290, 10))
 
         self.separator_2 = QtWidgets.QFrame(self.settings_window)
         self.separator_2.setFrameShape(QtWidgets.QFrame.HLine)
         self.separator_2.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.separator_2.setGeometry(QtCore.QRect(25, 210, 290, 10))
 
         # Run program on startup
         self.run_on_startup = QtWidgets.QCheckBox(self.settings_window)
-        self.run_on_startup.setGeometry(QtCore.QRect(25, 120, 300, 20))
         self.run_on_startup.setText("Run Upwatch on system startup")
         self.run_on_startup.adjustSize()
-        self.run_on_startup.setChecked(True)  # TODO: Add "Are you sure"-dialog if unchecked
+        self.run_on_startup.setChecked(
+            True
+        )  # TODO: Add "Are you sure"-dialog if unchecked
 
         # Set scraping interval
         self.scrape_interval_label = QtWidgets.QLabel(self.settings_window)
-        self.scrape_interval_label.setGeometry(QtCore.QRect(25, 165, 80, 20))
-        self.scrape_interval_label.setText("How often should Upwatch check \nfor new job posts? (minutes)")
+        self.scrape_interval_label.setText(
+            "How often should Upwatch check \nfor new job posts? (minutes)"
+        )
         self.scrape_interval_label.adjustSize()
         self.scrape_interval = QtWidgets.QComboBox(self.settings_window)
-        self.scrape_interval.setGeometry(QtCore.QRect(230, 175, 80, 20))
         self.scrape_interval.addItems(["10", "15", "20", "30", "45", "60"])
 
         # Don't Bother Me Rate groupBox
         self.low_rate_groupbox = QtWidgets.QGroupBox(self.settings_window)
-        self.low_rate_groupbox.setGeometry(QtCore.QRect(25, 230, 290, 150))
         self.low_rate_groupbox.setFlat(True)
         self.low_rate_groupbox.setCheckable(True)
         self.low_rate_groupbox.setChecked(json_content["DBMR"])
@@ -182,13 +185,14 @@ and paste the URL from the browser (Must be a valid Upwork link)"""
             "Job posts with a budget lower than your set\nvalue will not trigger a notification."
         )
 
+        low_rate_grid = QtWidgets.QGridLayout()
+        self.low_rate_groupbox.setLayout(low_rate_grid)
+
         # Don't Bother Me Rate Input Boxes
         # Fixed
         self.fixed_low_rate_label = QtWidgets.QLabel(self.low_rate_groupbox)
-        self.fixed_low_rate_label.setGeometry(QtCore.QRect(0, 40, 91, 16))
         self.fixed_low_rate_label.setText("Fixed-price")
         self.fixed_low_rate = QtWidgets.QLineEdit(self.low_rate_groupbox)
-        self.fixed_low_rate.setGeometry(QtCore.QRect(0, 60, 113, 21))
         self.fixed_low_rate.setPlaceholderText("e.g.  120")
         if self.json_content["Fixed Lowest Rate"] != 0:
             self.fixed_low_rate.setText(self.json_content["Fixed Lowest Rate"])
@@ -200,10 +204,8 @@ and paste the URL from the browser (Must be a valid Upwork link)"""
 
         # Hourly
         self.hourly_low_rate_label = QtWidgets.QLabel(self.low_rate_groupbox)
-        self.hourly_low_rate_label.setGeometry(QtCore.QRect(180, 40, 60, 16))
         self.hourly_low_rate_label.setText("Hourly")
         self.hourly_low_rate = QtWidgets.QLineEdit(self.low_rate_groupbox)
-        self.hourly_low_rate.setGeometry(QtCore.QRect(180, 60, 113, 21))
         self.hourly_low_rate.setPlaceholderText("e.g.  35")
         if self.json_content["Hourly Lowest Rate"] != 0:
             self.hourly_low_rate.setText(self.json_content["Hourly Lowest Rate"])
@@ -215,9 +217,27 @@ and paste the URL from the browser (Must be a valid Upwork link)"""
 
         # Ignore Posts without budget/rate Checkbox
         self.ignore_no_budgets = QtWidgets.QCheckBox(self.low_rate_groupbox)
-        self.ignore_no_budgets.setGeometry(QtCore.QRect(0, 100, 300, 20))
-        self.ignore_no_budgets.setText("Don't show me job posts without a specified \nbudget/hourly rate")
+        self.ignore_no_budgets.setText(
+            "Don't show me job posts without a specified \nbudget/hourly rate"
+        )
         self.ignore_no_budgets.adjustSize()
+
+        grid.addWidget(
+            self.settings_label_url, 0, 0, alignment=QtCore.Qt.AlignLeft
+        )
+        grid.addWidget(self.settings_line_edit, 1, 0, 1, 2, alignment=QtCore.Qt.AlignTop)
+        grid.addWidget(self.separator, 2, 0, 1, 2)
+        grid.addWidget(self.run_on_startup, 3, 0, alignment=QtCore.Qt.AlignLeft)
+        grid.addWidget(self.scrape_interval_label, 4, 0)
+        grid.addWidget(self.scrape_interval, 4, 1, alignment=QtCore.Qt.AlignRight)
+        grid.addWidget(self.separator_2, 5, 0, 1, 2)
+        grid.addWidget(self.low_rate_groupbox, 6, 0, 3, 2, alignment=QtCore.Qt.AlignBottom)
+
+        low_rate_grid.addWidget(self.fixed_low_rate_label, 0, 0, alignment=QtCore.Qt.AlignBottom)
+        low_rate_grid.addWidget(self.fixed_low_rate, 1, 0)
+        low_rate_grid.addWidget(self.hourly_low_rate_label, 0, 1, alignment=QtCore.Qt.AlignBottom)
+        low_rate_grid.addWidget(self.hourly_low_rate, 1, 1)
+        low_rate_grid.addWidget(self.ignore_no_budgets, 2, 0, 1, 2)
 
         self.settings_window.show()
 

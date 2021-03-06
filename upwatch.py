@@ -127,13 +127,13 @@ def message_printer(json_content, new_job_posts):
                 print(job_post["Payment Type"] + " " + job_post["Budget"])
             else:
                 print(job_post["Payment Type"])
-            print(job_post["Job Description"] + "...")
+            print(job_post["Job Description"][:150] + "...")
             print(job_post["Job Post URL"] + "\n")
 
 
 def json_difference_checker(json_content, job_post_list):
-    """Controls where in the new webscrape the highest job post in json is,
-    to check amount of new posts"""
+    """Checks the difference between current scrape and job posts
+    stored in json to print any new job posts"""
 
     old_job_urls = [job_post["Job Post URL"] for job_post in json_content["Job Posts"]]
 
@@ -207,7 +207,7 @@ def job_post_scraper(json_content):
         else:
             job_budget = ""
 
-        job_description = job_post.find("span", class_="js-description-text").text[:150]  # TODO: Change this so whole description is included, but :150 is printed
+        job_description = job_post.find("span", class_="js-description-text").text
 
         job_post_url = job_post.find("a", class_="job-title-link").attrs["href"]
 
@@ -228,9 +228,11 @@ def job_post_scraper(json_content):
 
 
 def scrape_loop(json_content):
+    """ Calls the web scraping function on a scheduled interval,
+    and sleeps in between for the time specified in json """
     while json_content["Requests URL"] is None:
         time.sleep(0.5)  # wait for url to be entered
     while True:
         sleep_time = int(json_content["Scrape interval"])
         job_post_scraper(json_content)
-        time.sleep(sleep_time)
+        time.sleep(sleep_time * 60)

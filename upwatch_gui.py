@@ -57,34 +57,41 @@ class UpwatchGui:
         # Comment out when testing code:
         self.start_logic_thread()
 
-    # Accepts user input URL
     def set_url(self, window, close_window=False):
+        """ Accepts user input URL and stores it in json_content """
         # TODO: VALIDITY CHECK - CHECK QT DESIGNER WIDGET
-        self.json_content["Requests URL"] = window.text()
+        if len(self.json_content["Requests URL"]) > 0:
+            self.json_content["Requests URL"] = window.text()
+        else:
+            self.json_content["Requests URL"] = None
         if close_window:
             self.set_url_window.close()
 
-    # Shows previously input URL in text input fields
-    def print_url_qline(self, qline):
+    def print_url_qline(self, qline):  # TODO: Consider if this method can be merged with set_url()
+        """ Shows previously input URL in text input fields """
         qline.setToolTip(self.json_content["Requests URL"])
         qline.setText(self.json_content["Requests URL"])
         qline.setCursorPosition(0)
 
     def start_logic_thread(self):
+        """ Calls the web scraping loop in a separate thread (to not freeze GUI) """
         threading.Thread(
             target=upwatch.scrape_loop, args=[json_content], daemon=True
         ).start()
 
     def set_startup_state(self):
+        """ Enables / Disables 'Run on startup' in json """
         if self.json_content["Run on startup"] is True:
             self.json_content["Run on startup"] = False
         else:
             self.json_content["Run on startup"] = True
 
     def set_scrape_interval(self):
+        """ Sets the 'Scrape interval' state in json """
         self.json_content["Scrape interval"] = self.scrape_interval.currentText()
 
     def set_dbmr_state(self):
+        """ Enables / Disables 'Don't bother me rate' in json """
         if self.json_content["DBMR"] is False:
             self.json_content["DBMR"] = True
         else:
@@ -93,24 +100,28 @@ class UpwatchGui:
             self.json_content["Hourly Lowest Rate"] = 0
 
     def set_dbmr_fixed(self):
+        """ Sets the value of 'Don't bother me rate' for fixed-price job posts """
         if len(self.fixed_low_rate.text()) > 0:
             self.json_content["Fixed Lowest Rate"] = self.fixed_low_rate.text()
         else:
             self.json_content["Fixed Lowest Rate"] = 0
 
     def set_dbmr_hourly(self):
+        """ Sets the value of 'Don't bother me rate' for hourly job posts """
         if len(self.hourly_low_rate.text()) > 0:
             self.json_content["Hourly Lowest Rate"] = self.hourly_low_rate.text()
         else:
             self.json_content["Hourly Lowest Rate"] = 0
 
     def set_ignore_no_budget(self):
+        """ Enables / Disables if to ignore job posts without a specified budget in json """
         if self.json_content["Ignore no budget"] is False:
             self.json_content["Ignore no budget"] = True
         else:
             self.json_content["Ignore no budget"] = False
 
     def close_program(self):
+        """ Closes Upwatch """
         upwatch.write_to_json(self.json_content)
         self.app.quit()
 
@@ -118,6 +129,7 @@ class UpwatchGui:
 
     # "Set URL" Window
     def set_url_window(self):
+        """ Creates the 'Set URL' dialog for user to specify URL to scrape from """
         self.set_url_window = QtWidgets.QDialog()
         self.paste_url = QtWidgets.QLineEdit(self.set_url_window)
         self.paste_url.setPlaceholderText("Paste Valid Upwork URL here")
@@ -139,6 +151,7 @@ class UpwatchGui:
     # 3) Run program on start up
     # Settings Window  # TODO: Add "open upwatch on system startup option (default True)"
     def settings_window(self):
+        """ Creates program's Settings window """
         self.settings_window = QtWidgets.QWidget()
         # self.settings_window.adjustSize()
 
@@ -150,7 +163,7 @@ class UpwatchGui:
         self.settings_label_url.setText("Paste Upwork URL Here")
         self.settings_label_url.setToolTip(
             """Apply appropriate filters for your job on Upwork
-and paste the URL from the browser (Must be a valid Upwork link)"""
+            and paste the URL from the browser (Must be a valid Upwork link)"""
         )
 
         # URL Text Input Box
@@ -265,6 +278,7 @@ and paste the URL from the browser (Must be a valid Upwork link)"""
 
     # About Window
     def about_window(self):
+        """ Creates program's About window """
         self.about_window = QtWidgets.QWidget()
         self.about_window.setWindowTitle("About")
         self.about_window.setGeometry(300, 300, 300, 300)

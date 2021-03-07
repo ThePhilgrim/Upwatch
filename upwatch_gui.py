@@ -3,6 +3,7 @@ from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 import threading
 import upwatch
+import time
 
 
 class UpwatchGui:
@@ -15,11 +16,11 @@ class UpwatchGui:
         self.app.setQuitOnLastWindowClosed(False)
 
         # Create the icon
-        icon = QtGui.QIcon("uwlogo.png")  # TODO: Fix own logo
+        self.icon = QtGui.QIcon("uwlogo.png")  # TODO: Fix own logo
 
         # Create the tray
         self.tray = QtWidgets.QSystemTrayIcon()
-        self.tray.setIcon(icon)
+        self.tray.setIcon(self.icon)
         self.tray.setVisible(True)
 
         self.actions = []
@@ -55,7 +56,12 @@ class UpwatchGui:
             self.settings_window()
 
         # Comment out when testing code:
-        self.start_logic_thread()
+        self.worker_thread = WorkerThread(self.json_content)
+        self.worker_thread.job_done.connect(self.on_job_done)
+        self.worker_thread.json_content = self.json_content
+        self.worker_thread.start()
+
+        # self.start_logic_thread()
 
     def set_url(self, window, close_window=False):
         """ Accepts user input URL and stores it in json_content """
@@ -291,6 +297,35 @@ class UpwatchGui:
         about_button.setText("Click Here Right Now!")
         about_button.move(65, 105)
         self.about_window.show()
+
+    def on_job_done(self):
+        print(self.worker_thread.new_job_posts)
+        # Generating push notification goes here.
+        # self.tray.showMessage('test', 'testing', self.icon)
+
+
+class WorkerThread(QtCore.QThread):
+
+    job_done = QtCore.pyqtSignal(object)
+
+    def __init__(self, json_content, parent=None):
+        super(WorkerThread, self).__init__(parent)
+        self.json_content = json_content
+        self.new_job_posts = None
+
+    def do_work(self, json_content):
+        """ Calls the web scraping function on a scheduled interval,
+        and sleeps in between for the time specified in json """
+        while self.json_content["Requests URL"] is None:
+            time.sleep(0.5)  # wait for url to be entered
+        while True:
+            sleep_time = int(self.json_content["Scrape interval"])
+            upwatch.job_post_scraper(self.json_content)
+            self.job_done.emit(upwatch.job_post_scraper)
+            time.sleep(sleep_time * 60)
+
+    def run(self):
+        self.do_work(self.json_content)
 
 
 json_content = upwatch.read_from_json()

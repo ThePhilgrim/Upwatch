@@ -298,8 +298,8 @@ class UpwatchGui:
         about_button.move(65, 105)
         self.about_window.show()
 
-    def on_job_done(self):
-        print(self.worker_thread.new_job_posts)
+    def on_job_done(self, result):
+        print(result)
         # Generating push notification goes here.
         # self.tray.showMessage('test', 'testing', self.icon)
 
@@ -311,7 +311,6 @@ class WorkerThread(QtCore.QThread):
     def __init__(self, json_content, parent=None):
         super(WorkerThread, self).__init__(parent)
         self.json_content = json_content
-        self.new_job_posts = None
 
     def do_work(self, json_content):
         """ Calls the web scraping function on a scheduled interval,
@@ -320,9 +319,11 @@ class WorkerThread(QtCore.QThread):
             time.sleep(0.5)  # wait for url to be entered
         while True:
             sleep_time = int(self.json_content["Scrape interval"])
-            upwatch.job_post_scraper(self.json_content)
-            self.job_done.emit(upwatch.job_post_scraper)
+            new_job_posts = upwatch.job_post_scraper(self.json_content)
+            self.job_done.emit(new_job_posts)
+            print("job done. Sleeping")
             time.sleep(sleep_time * 60)
+            print("Let's go again")
 
     def run(self):
         self.do_work(self.json_content)

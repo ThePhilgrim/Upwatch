@@ -112,14 +112,14 @@ class UpwatchGui:
     def set_dbmr_fixed(self):
         """ Sets the value of 'Don't bother me rate' for fixed-price job posts """
         if len(self.fixed_low_rate.text()) > 0:
-            self.json_content["Fixed Lowest Rate"] = self.fixed_low_rate.text()
+            self.json_content["Fixed Lowest Rate"] = int(self.fixed_low_rate.text())
         else:
             self.json_content["Fixed Lowest Rate"] = 0
 
     def set_dbmr_hourly(self):
         """ Sets the value of 'Don't bother me rate' for hourly job posts """
         if len(self.hourly_low_rate.text()) > 0:
-            self.json_content["Hourly Lowest Rate"] = self.hourly_low_rate.text()
+            self.json_content["Hourly Lowest Rate"] = int(self.hourly_low_rate.text())
         else:
             self.json_content["Hourly Lowest Rate"] = 0
 
@@ -235,7 +235,7 @@ class UpwatchGui:
         self.fixed_low_rate = QtWidgets.QLineEdit(self.low_rate_groupbox)
         self.fixed_low_rate.setPlaceholderText("e.g.  120")
         if self.json_content["Fixed Lowest Rate"] != 0:
-            self.fixed_low_rate.setText(self.json_content["Fixed Lowest Rate"])
+            self.fixed_low_rate.setText(str(self.json_content["Fixed Lowest Rate"]))
         self.fixed_low_rate.setClearButtonEnabled(True)
         self.fixed_low_rate.setToolTip(
             "Any fixed-price job post paying less than your set value will be ignored."
@@ -248,7 +248,7 @@ class UpwatchGui:
         self.hourly_low_rate = QtWidgets.QLineEdit(self.low_rate_groupbox)
         self.hourly_low_rate.setPlaceholderText("e.g.  35")
         if self.json_content["Hourly Lowest Rate"] != 0:
-            self.hourly_low_rate.setText(self.json_content["Hourly Lowest Rate"])
+            self.hourly_low_rate.setText(str(self.json_content["Hourly Lowest Rate"]))
         self.hourly_low_rate.setClearButtonEnabled(True)
         self.hourly_low_rate.setToolTip(
             "Any hourly contract paying less than your set value will be ignored."
@@ -320,36 +320,12 @@ class UpwatchGui:
             self.json_content["Ignore no budget"] is True
         ):  # TODO: Find out if it's possible to set this if statement INSIDE of the if-statment below.
             for job_post in result:
-                print(job_post)
+                # print(job_post)  # Use this line for debugging
                 # job_post["Payment Type"] can be "Fixed-price", "Hourly: $X.00–$Y.00", or "Hourly"
                 if (
-                    (job_post["Payment Type"] == "Fixed-price")
+                    job_post["Payment Type"] == "Fixed-price"
                     and len(job_post["Budget"]) > 0
                     and (
-                        (
-                            (upwatch.extract_fixed_price(job_post["Budget"]))
-                            >= fixed_dbmr_rate
-                        )
-                        or "placeholder" in job_post["Job Description"]
-                    )
-                ):
-                    selected_new_job_posts.append(job_post)
-                elif (
-                    job_post["Payment Type"].split()[0] == "Hourly:"
-                    and (
-                        (upwatch.extract_hourly_price(job_post["Payment Type"]))
-                        >= hourly_dbmr_rate
-                    )
-                    and len(job_post["Payment Type"] > 7)
-                ):
-                    selected_new_job_posts.append(
-                        job_post
-                    )  # do I need the last "and" ?)
-        else:
-            for job_post in result:
-                print(job_post)
-                if (job_post["Payment Type"] == "Fixed-price") and (
-                    (
                         upwatch.extract_fixed_price(job_post["Budget"])
                         >= fixed_dbmr_rate
                         or "placeholder" in job_post["Job Description"]
@@ -358,18 +334,29 @@ class UpwatchGui:
                     selected_new_job_posts.append(job_post)
                 elif (
                     job_post["Payment Type"].split()[0] == "Hourly:"
-                    and (
-                        upwatch.extract_hourly_price(job_post["Payment Type"])
-                        >= hourly_dbmr_rate
-                    )
-                    or job_post["Payment Type"] == "Hourly:"
+                    and upwatch.extract_hourly_price(job_post["Payment Type"])
+                    >= hourly_dbmr_rate
+                    and len(job_post["Payment Type"]) > 7
+                ):
+                    selected_new_job_posts.append(
+                        job_post
+                    )  # do I need the last "and" ?)
+        else:
+            for job_post in result:
+                # print(job_post)  # Use this line for debugging
+                if job_post["Payment Type"] == "Fixed-price" and (
+                    upwatch.extract_fixed_price(job_post["Budget"]) >= fixed_dbmr_rate
+                    or "placeholder" in job_post["Job Description"]
                 ):
                     selected_new_job_posts.append(job_post)
+                elif (
+                    job_post["Payment Type"].split()[0] == "Hourly:"
+                    and upwatch.extract_hourly_price(job_post["Payment Type"])
+                    >= hourly_dbmr_rate
+                ) or job_post["Payment Type"] == "Hourly:":
+                    selected_new_job_posts.append(job_post)
 
-        for selected_job_post in selected_new_job_posts:
-            print(" ")
-            print(" ")
-            print(selected_job_post)
+        print(selected_new_job_posts)
 
 
 class WorkerThread(QtCore.QThread):
@@ -380,7 +367,7 @@ class WorkerThread(QtCore.QThread):
         super(WorkerThread, self).__init__(parent)
         self.json_content = json_content
 
-    def do_work(self, json_content):
+    def run(self):
         """Calls the web scraping function on a scheduled interval,
         and sleeps in between for the time specified in json"""
         while self.json_content["Requests URL"] is None:
@@ -392,9 +379,6 @@ class WorkerThread(QtCore.QThread):
             print("job done. Sleeping")
             time.sleep(sleep_time * 60)
             print("Let's go again")
-
-    def run(self):
-        self.do_work(self.json_content)
 
 
 json_content = upwatch.read_from_json()

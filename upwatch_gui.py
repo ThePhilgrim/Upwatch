@@ -73,7 +73,9 @@ class UpwatchGui:
         if close_window:
             self.set_url_window.close()
 
-    def print_url_qline(self, qline):  # TODO: Consider if this method can be merged with set_url()
+    def print_url_qline(
+        self, qline
+    ):  # TODO: Consider if this method can be merged with set_url()
         """ Shows previously input URL in text input fields """
         qline.setToolTip(self.json_content["Requests URL"])
         qline.setText(self.json_content["Requests URL"])
@@ -104,6 +106,8 @@ class UpwatchGui:
             self.json_content["DBMR"] = False
             self.json_content["Fixed Lowest Rate"] = 0
             self.json_content["Hourly Lowest Rate"] = 0
+
+    # TODO: Make sure that fixed/hourly dbmr gets set to 0 if they are removed from settings window.
 
     def set_dbmr_fixed(self):
         """ Sets the value of 'Don't bother me rate' for fixed-price job posts """
@@ -194,9 +198,7 @@ class UpwatchGui:
         self.run_on_startup = QtWidgets.QCheckBox(self.settings_window)
         self.run_on_startup.setText("Run Upwatch on system startup")
         self.run_on_startup.adjustSize()
-        self.run_on_startup.setChecked(
-            json_content["Run on startup"]
-        )
+        self.run_on_startup.setChecked(json_content["Run on startup"])
         self.run_on_startup.toggled.connect(self.set_startup_state)
 
         # TODO: Add "Are you sure"-dialog if unchecked
@@ -263,20 +265,26 @@ class UpwatchGui:
         self.ignore_no_budget.toggled.connect(self.set_ignore_no_budget)
 
         # Add widgets to grid layout
+        grid.addWidget(self.settings_label_url, 0, 0, alignment=QtCore.Qt.AlignLeft)
         grid.addWidget(
-            self.settings_label_url, 0, 0, alignment=QtCore.Qt.AlignLeft
+            self.settings_line_edit, 1, 0, 1, 2, alignment=QtCore.Qt.AlignTop
         )
-        grid.addWidget(self.settings_line_edit, 1, 0, 1, 2, alignment=QtCore.Qt.AlignTop)
         grid.addWidget(self.separator, 2, 0, 1, 2)
         grid.addWidget(self.run_on_startup, 3, 0, alignment=QtCore.Qt.AlignLeft)
         grid.addWidget(self.scrape_interval_label, 4, 0)
         grid.addWidget(self.scrape_interval, 4, 1, alignment=QtCore.Qt.AlignRight)
         grid.addWidget(self.separator_2, 5, 0, 1, 2)
-        grid.addWidget(self.low_rate_groupbox, 6, 0, 3, 2, alignment=QtCore.Qt.AlignBottom)
+        grid.addWidget(
+            self.low_rate_groupbox, 6, 0, 3, 2, alignment=QtCore.Qt.AlignBottom
+        )
 
-        low_rate_grid.addWidget(self.fixed_low_rate_label, 0, 0, alignment=QtCore.Qt.AlignBottom)
+        low_rate_grid.addWidget(
+            self.fixed_low_rate_label, 0, 0, alignment=QtCore.Qt.AlignBottom
+        )
         low_rate_grid.addWidget(self.fixed_low_rate, 1, 0)
-        low_rate_grid.addWidget(self.hourly_low_rate_label, 0, 1, alignment=QtCore.Qt.AlignBottom)
+        low_rate_grid.addWidget(
+            self.hourly_low_rate_label, 0, 1, alignment=QtCore.Qt.AlignBottom
+        )
         low_rate_grid.addWidget(self.hourly_low_rate, 1, 1)
         low_rate_grid.addWidget(self.ignore_no_budget, 2, 0, 1, 2)
 
@@ -299,9 +307,69 @@ class UpwatchGui:
         self.about_window.show()
 
     def on_job_done(self, result):
-        print(result)
+        # print(result)
         # Generating push notification goes here.
         # self.tray.showMessage('test', 'testing', self.icon)
+        fixed_dbmr_rate = self.json_content["Fixed Lowest Rate"]
+
+        hourly_dbmr_rate = self.json_content["Hourly Lowest Rate"]
+
+        selected_new_job_posts = []
+
+        if (
+            self.json_content["Ignore no budget"] is True
+        ):  # TODO: Find out if it's possible to set this if statement INSIDE of the if-statment below.
+            for job_post in result:
+                print(job_post)
+                # job_post["Payment Type"] can be "Fixed-price", "Hourly: $X.00–$Y.00", or "Hourly"
+                if (
+                    (job_post["Payment Type"] == "Fixed-price")
+                    and len(job_post["Budget"]) > 0
+                    and (
+                        (
+                            (upwatch.extract_fixed_price(job_post["Budget"]))
+                            >= fixed_dbmr_rate
+                        )
+                        or "placeholder" in job_post["Job Description"]
+                    )
+                ):
+                    selected_new_job_posts.append(job_post)
+                elif (
+                    job_post["Payment Type"].split()[0] == "Hourly:"
+                    and (
+                        (upwatch.extract_hourly_price(job_post["Payment Type"]))
+                        >= hourly_dbmr_rate
+                    )
+                    and len(job_post["Payment Type"] > 7)
+                ):
+                    selected_new_job_posts.append(
+                        job_post
+                    )  # do I need the last "and" ?)
+        else:
+            for job_post in result:
+                print(job_post)
+                if (job_post["Payment Type"] == "Fixed-price") and (
+                    (
+                        upwatch.extract_fixed_price(job_post["Budget"])
+                        >= fixed_dbmr_rate
+                        or "placeholder" in job_post["Job Description"]
+                    )
+                ):
+                    selected_new_job_posts.append(job_post)
+                elif (
+                    job_post["Payment Type"].split()[0] == "Hourly:"
+                    and (
+                        upwatch.extract_hourly_price(job_post["Payment Type"])
+                        >= hourly_dbmr_rate
+                    )
+                    or job_post["Payment Type"] == "Hourly:"
+                ):
+                    selected_new_job_posts.append(job_post)
+
+        for selected_job_post in selected_new_job_posts:
+            print(" ")
+            print(" ")
+            print(selected_job_post)
 
 
 class WorkerThread(QtCore.QThread):
@@ -313,8 +381,8 @@ class WorkerThread(QtCore.QThread):
         self.json_content = json_content
 
     def do_work(self, json_content):
-        """ Calls the web scraping function on a scheduled interval,
-        and sleeps in between for the time specified in json """
+        """Calls the web scraping function on a scheduled interval,
+        and sleeps in between for the time specified in json"""
         while self.json_content["Requests URL"] is None:
             time.sleep(0.5)  # wait for url to be entered
         while True:

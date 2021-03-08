@@ -61,8 +61,6 @@ class UpwatchGui:
         self.worker_thread.json_content = self.json_content
         self.worker_thread.start()
 
-        # self.start_logic_thread()
-
     def set_url(self, window, close_window=False):
         """ Accepts user input URL and stores it in json_content """
         # TODO: VALIDITY CHECK - CHECK QT DESIGNER WIDGET
@@ -324,7 +322,7 @@ class UpwatchGui:
                 # job_post["Payment Type"] can be "Fixed-price", "Hourly: $X.00–$Y.00", or "Hourly"
                 if (
                     job_post["Payment Type"] == "Fixed-price"
-                    and len(job_post["Budget"]) > 0
+                    and job_post["Budget"]
                     and (
                         upwatch.extract_fixed_price(job_post["Budget"])
                         >= fixed_dbmr_rate
@@ -336,7 +334,7 @@ class UpwatchGui:
                     job_post["Payment Type"].split()[0] == "Hourly:"
                     and upwatch.extract_hourly_price(job_post["Payment Type"])
                     >= hourly_dbmr_rate
-                    and len(job_post["Payment Type"]) > 7
+                    and job_post["Payment Type"].startswith("Hourly: ")
                 ):
                     selected_new_job_posts.append(
                         job_post
@@ -363,8 +361,8 @@ class WorkerThread(QtCore.QThread):
 
     job_done = QtCore.pyqtSignal(object)
 
-    def __init__(self, json_content, parent=None):
-        super(WorkerThread, self).__init__(parent)
+    def __init__(self, json_content):
+        super().__init__()
         self.json_content = json_content
 
     def run(self):

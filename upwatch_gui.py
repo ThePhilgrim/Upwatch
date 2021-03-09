@@ -306,7 +306,7 @@ class UpwatchGui:
         selected_new_job_posts = []
 
         if (
-            self.json_content["Ignore no budget"] is True
+            self.json_content["Ignore no budget"]
         ):
             for job_post in result:
                 # job_post["Payment Type"] can be "Fixed-price", "Hourly: $X.00–$Y.00", or "Hourly"

@@ -324,7 +324,6 @@ class UpwatchGui:
                     job_post["Payment Type"].split()[0] == "Hourly:"
                     and upwatch.extract_hourly_price(job_post["Payment Type"])
                     >= hourly_dbmr_rate
-                    and job_post["Payment Type"].startswith("Hourly:")
                 ):
                     selected_new_job_posts.append(
                         job_post

@@ -305,9 +305,7 @@ class UpwatchGui:
 
         selected_new_job_posts = []
 
-        if (
-            self.json_content["Ignore no budget"]
-        ):
+        if self.json_content["Ignore no budget"]:
             for job_post in result:
                 # job_post["Payment Type"] can be "Fixed-price", "Hourly: $X.00–$Y.00", or "Hourly"
                 if (
@@ -316,7 +314,10 @@ class UpwatchGui:
                     and (
                         upwatch.extract_fixed_price(job_post["Budget"])
                         >= fixed_dbmr_rate
-                        or "placeholder" in job_post["Job Description"]  # TODO: Need to account for "placeholder", "Placeholder", & "PLACEHOLDER"
+                        or "placeholder"
+                        in job_post[
+                            "Job Description"
+                        ]  # TODO: Need to account for "placeholder", "Placeholder", & "PLACEHOLDER"
                     )
                 ):
                     selected_new_job_posts.append(job_post)
@@ -325,9 +326,7 @@ class UpwatchGui:
                     and upwatch.extract_hourly_price(job_post["Payment Type"])
                     >= hourly_dbmr_rate
                 ):
-                    selected_new_job_posts.append(
-                        job_post
-                    )
+                    selected_new_job_posts.append(job_post)
         else:
             for job_post in result:
                 if job_post["Payment Type"] == "Fixed-price" and (

@@ -53,7 +53,7 @@ class UpwatchGui:
         self.tray.setContextMenu(self.menu)
 
         # Launches settings window on program start if no Requests URL is defined.
-        if self.json_content["Requests URL"] is None:
+        if not self.json_content["Requests URL"]:
             self.settings_window()
 
         self.worker_thread = WorkerThread(self.json_content)
@@ -64,10 +64,11 @@ class UpwatchGui:
     def set_url(self, window, close_window=False):
         """ Accepts user input URL and stores it in json_content """
         # TODO: VALIDITY CHECK - CHECK QT DESIGNER WIDGET
-        if len(self.json_content["Requests URL"]) > 0:
+        # if len(self.json_content["Requests URL"]) > 0:
+        if len(window.text()) > 0:
             self.json_content["Requests URL"] = window.text()
         else:
-            self.json_content["Requests URL"] = None
+            self.json_content["Requests URL"] = ""
         if close_window:
             self.set_url_window.close()
 
@@ -128,7 +129,7 @@ class UpwatchGui:
 
     def close_program(self):
         """ Closes Upwatch """
-        # upwatch.write_to_json(self.json_content)
+        upwatch.write_to_json(self.json_content)
         self.app.quit()
 
     # TODO: Make sure set_url_window shows up under the Upwatch Icon!
@@ -146,7 +147,7 @@ class UpwatchGui:
         self.set_url_window.setWindowFlags(
             QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint
         )
-        if self.json_content["Requests URL"] is not None:
+        if self.json_content["Requests URL"]:
             self.print_url_qline(self.paste_url)
         self.set_url_window.show()
         # TODO: Add "QRegexpValidator − Checks input against a Regex expression"
@@ -171,7 +172,7 @@ class UpwatchGui:
         # URL Text Input Box
         self.settings_line_edit = QtWidgets.QLineEdit(self.settings_window)
         self.settings_line_edit.setPlaceholderText("https://www.upwork.com/...")
-        if self.json_content["Requests URL"] is not None:
+        if self.json_content["Requests URL"]:
             self.print_url_qline(self.settings_line_edit)
         self.settings_line_edit.textChanged.connect(
             lambda: self.set_url(self.settings_line_edit)
@@ -202,7 +203,7 @@ class UpwatchGui:
         )
         self.scrape_interval_label.adjustSize()
         self.scrape_interval = QtWidgets.QComboBox(self.settings_window)
-        self.scrape_interval.addItems(["10", "15", "20", "30", "45", "60"])
+        self.scrape_interval.addItems(["1", "3", "5", "10", "20", "30"])
         self.scrape_interval.setCurrentText(str(json_content["Scrape interval"]))
         self.scrape_interval.currentIndexChanged.connect(self.set_scrape_interval)
 
@@ -347,21 +348,27 @@ class UpwatchGui:
 
         if self.selected_job_posts_number == 1:
             self.current_job_post = self.selected_new_job_posts[0]
-            if job_post["Payment Type"] == "Fixed-price":
-                self.tray.showMessage(job_post["Budget"] + " – " + job_post["Job Title"], job_post["Job Description"][:150], self.icon, 10000)
-            elif job_post["Payment Type"].startswith("Hourly:"):
-                self.tray.showMessage(job_post["Budget"] + ": " + job_post["Job Title"], job_post["Job Description"][:150], self.icon, 10000)
+            print("CURRENT NEW 1")
+            print(" ")
+            print(self.current_job_post)
+            if self.current_job_post["Payment Type"] == "Fixed-price":
+                self.tray.showMessage(self.current_job_post["Budget"] + " – " + self.current_job_post["Job Title"], self.current_job_post["Job Description"][:150], self.icon, 10000)
+            elif self.current_job_post["Payment Type"].startswith("Hourly:"):
+                self.tray.showMessage(self.current_job_post["Budget"] + ": " + self.current_job_post["Job Title"], self.current_job_post["Job Description"][:150], self.icon, 10000)  # TODO: Title not shown right until todo in upwatch.py is fixed
             else:
-                self.tray.showMessage(job_post["Payment Type"] + " – " + job_post["Job Title"], job_post["Job Description"][:150], self.icon, 10000)
+                self.tray.showMessage(self.current_job_post["Payment Type"] + " – " + self.current_job_post["Job Title"], self.current_job_post["Job Description"][:150], self.icon, 10000)
         elif self.selected_job_posts_number > 1:
+            print("SELE LIST!!!!")
+            print(" ")
+            print(self.selected_new_job_posts)
             self.tray.showMessage(str(self.selected_job_posts_number) + " New Job Posts", "Click here to see job posts.", self.icon, 10000)
 
         self.tray.messageClicked.connect(self.message_clicked)
 
     def message_clicked(self):
         if self.selected_job_posts_number == 1:
+            print(self.current_job_post["Job Post URL"])
             webbrowser.open_new_tab(self.current_job_post["Job Post URL"])
-            # print(self.current_job_post["Job Title"])  # TODO: Change to webbrowser.open_new_tab(URL)
         else:
             print("This will open a dialog window.")
 
@@ -377,7 +384,7 @@ class WorkerThread(QtCore.QThread):
     def run(self):
         """Calls the web scraping function on a scheduled interval,
         and sleeps in between for the time specified in json"""
-        while self.json_content["Requests URL"] is None:
+        while not self.json_content["Requests URL"]:
             time.sleep(0.5)  # wait for url to be entered
         while True:
             sleep_time = int(self.json_content["Scrape interval"])

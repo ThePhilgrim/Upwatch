@@ -15,9 +15,9 @@ def read_from_json():
             return json_content
     except FileNotFoundError:
         json_content = {
-            "Requests URL": None,
+            "Requests URL": "",
             "Run on startup": True,
-            "Scrape interval": 15,
+            "Scrape interval": 5,
             "DBMR": False,
             "Fixed Lowest Rate": 0,
             "Hourly Lowest Rate": 0,
@@ -81,6 +81,11 @@ def json_difference_checker(json_content, job_post_list):
         for job_post in job_post_list
         if job_post["Job Post URL"] not in old_job_urls
     ]
+    print("DIFFERENCE CHECKER:")
+    print(" ")
+    print(str(new_job_posts))
+    print(" ")
+    print(" ")
 
     json_content["Job Posts"] = job_post_list
 

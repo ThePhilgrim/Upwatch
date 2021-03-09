@@ -4,6 +4,7 @@ from PyQt5 import QtCore
 import threading
 import upwatch
 import time
+import webbrowser
 
 
 class UpwatchGui:
@@ -55,7 +56,6 @@ class UpwatchGui:
         if self.json_content["Requests URL"] is None:
             self.settings_window()
 
-        # Comment out when testing code:
         self.worker_thread = WorkerThread(self.json_content)
         self.worker_thread.job_done.connect(self.on_job_done)
         self.worker_thread.json_content = self.json_content
@@ -303,7 +303,7 @@ class UpwatchGui:
 
         hourly_dbmr_rate = self.json_content["Hourly Lowest Rate"]
 
-        selected_new_job_posts = []
+        self.selected_new_job_posts = []
 
         if self.json_content["Ignore no budget"]:
             for job_post in result:
@@ -320,32 +320,49 @@ class UpwatchGui:
                         ].lower()
                     )
                 ):
-                    selected_new_job_posts.append(job_post)
+                    self.selected_new_job_posts.append(job_post)
                 elif (
                     job_post["Payment Type"].split()[0] == "Hourly:"
                     and upwatch.extract_hourly_price(job_post["Payment Type"])
                     >= hourly_dbmr_rate
                 ):
-                    selected_new_job_posts.append(job_post)
+                    self.selected_new_job_posts.append(job_post)
         else:
             for job_post in result:
                 if job_post["Payment Type"] == "Fixed-price" and (
                     upwatch.extract_fixed_price(job_post["Budget"]) >= fixed_dbmr_rate
                     or "placeholder" in job_post["Job Description"]
                 ):
-                    selected_new_job_posts.append(job_post)
+                    self.selected_new_job_posts.append(job_post)
                 elif job_post["Payment Type"] == "Hourly" or (
                     job_post["Payment Type"].split()[0] == "Hourly:"
                     and upwatch.extract_hourly_price(job_post["Payment Type"])
                     >= hourly_dbmr_rate
                 ):
-                    selected_new_job_posts.append(job_post)
+                    self.selected_new_job_posts.append(job_post)
 
-        print(selected_new_job_posts)
+        print(self.selected_new_job_posts)
 
-        self.current_selected_job_post = None
-        for selected_new_job_post in selected_new_job_posts:
+        self.selected_job_posts_number = len(self.selected_new_job_posts)
 
+        if self.selected_job_posts_number == 1:
+            self.current_job_post = self.selected_new_job_posts[0]
+            if job_post["Payment Type"] == "Fixed-price":
+                self.tray.showMessage(job_post["Budget"] + " – " + job_post["Job Title"], job_post["Job Description"][:150], self.icon, 10000)
+            elif job_post["Payment Type"].startswith("Hourly:"):
+                self.tray.showMessage(job_post["Budget"] + ": " + job_post["Job Title"], job_post["Job Description"][:150], self.icon, 10000)
+            else:
+                self.tray.showMessage(job_post["Payment Type"] + " – " + job_post["Job Title"], job_post["Job Description"][:150], self.icon, 10000)
+        elif self.selected_job_posts_number > 1:
+            self.tray.showMessage(str(self.selected_job_posts_number) + " New Job Posts", "Click here to see job posts.", self.icon, 10000)
+
+        self.tray.messageClicked.connect(self.messageClicked)
+
+    def messageClicked(self):
+        if self.selected_job_posts_number == 1:
+            print(self.current_job_post["Job Title"])  # TODO: Change to webbrowser.open_new_tab(URL)
+        else:
+            print("This will open a dialog window.")
 
 
 class WorkerThread(QtCore.QThread):

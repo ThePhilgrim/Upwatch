@@ -6,10 +6,7 @@ import time
 # !import re  # For looking for eventual word counts in job posts & controlling the validity of url input.
 
 
-# TODO: Add to json: user agent, username, password
-# Regarding password: "<Akuli> the only thing that comes to mind is first logging
-# in with browser, then sending the exact same headers (User-Agent and friends)
-# and cookies with request"
+# TODO: Add to json: user agent
 def read_from_json():
     """ Reads all the job posts from job_posts.json """
     try:
@@ -146,6 +143,8 @@ def job_post_scraper(json_content):
 
         if job_payment_type == "Fixed-price":
             job_budget = job_post.find("strong", class_="js-budget").text.strip()
+        # elif job_payment_type.startswith("Hourly:"):
+        #     job_budget = job_payment_type.split()[1]  # TODO: Implement this and simplify extract_hourly_price
         else:
             job_budget = ""
 

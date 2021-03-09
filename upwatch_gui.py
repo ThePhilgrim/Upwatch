@@ -128,7 +128,7 @@ class UpwatchGui:
 
     def close_program(self):
         """ Closes Upwatch """
-        upwatch.write_to_json(self.json_content)
+        # upwatch.write_to_json(self.json_content)
         self.app.quit()
 
     # TODO: Make sure set_url_window shows up under the Upwatch Icon!
@@ -341,7 +341,7 @@ class UpwatchGui:
                 ):
                     self.selected_new_job_posts.append(job_post)
 
-        print(self.selected_new_job_posts)
+        # print(self.selected_new_job_posts)
 
         self.selected_job_posts_number = len(self.selected_new_job_posts)
 
@@ -356,11 +356,12 @@ class UpwatchGui:
         elif self.selected_job_posts_number > 1:
             self.tray.showMessage(str(self.selected_job_posts_number) + " New Job Posts", "Click here to see job posts.", self.icon, 10000)
 
-        self.tray.messageClicked.connect(self.messageClicked)
+        self.tray.messageClicked.connect(self.message_clicked)
 
     def message_clicked(self):
         if self.selected_job_posts_number == 1:
-            print(self.current_job_post["Job Title"])  # TODO: Change to webbrowser.open_new_tab(URL)
+            webbrowser.open_new_tab(self.current_job_post["Job Post URL"])
+            # print(self.current_job_post["Job Title"])  # TODO: Change to webbrowser.open_new_tab(URL)
         else:
             print("This will open a dialog window.")
 

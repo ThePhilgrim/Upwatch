@@ -105,8 +105,6 @@ class UpwatchGui:
             self.json_content["Fixed Lowest Rate"] = 0
             self.json_content["Hourly Lowest Rate"] = 0
 
-    # TODO: Make sure that fixed/hourly dbmr gets set to 0 if they are removed from settings window.
-
     def set_dbmr_fixed(self):
         """ Sets the value of 'Don't bother me rate' for fixed-price job posts """
         if len(self.fixed_low_rate.text()) > 0:
@@ -153,11 +151,7 @@ class UpwatchGui:
         self.set_url_window.show()
         # TODO: Add "QRegexpValidator − Checks input against a Regex expression"
 
-    # TODO: Add to settings window:
-    # 1) How often to run Scraper
-    # 2) Ignore posts that don't have specified budget/rate
-    # 3) Run program on start up
-    # Settings Window  # TODO: Add "open upwatch on system startup option (default True)"
+    # TODO: Add to settings window: Run program on start up
     def settings_window(self):
         """ Creates program's Settings window """
         self.settings_window = QtWidgets.QWidget()
@@ -305,9 +299,6 @@ class UpwatchGui:
         self.about_window.show()
 
     def on_job_done(self, result):
-        # print(result)
-        # Generating push notification goes here.
-        # self.tray.showMessage('test', 'testing', self.icon)
         fixed_dbmr_rate = self.json_content["Fixed Lowest Rate"]
 
         hourly_dbmr_rate = self.json_content["Hourly Lowest Rate"]
@@ -316,9 +307,8 @@ class UpwatchGui:
 
         if (
             self.json_content["Ignore no budget"] is True
-        ):  # TODO: Find out if it's possible to set this if statement INSIDE of the if-statment below.
+        ):
             for job_post in result:
-                # print(job_post)  # Use this line for debugging
                 # job_post["Payment Type"] can be "Fixed-price", "Hourly: $X.00–$Y.00", or "Hourly"
                 if (
                     job_post["Payment Type"] == "Fixed-price"
@@ -326,7 +316,7 @@ class UpwatchGui:
                     and (
                         upwatch.extract_fixed_price(job_post["Budget"])
                         >= fixed_dbmr_rate
-                        or "placeholder" in job_post["Job Description"]
+                        or "placeholder" in job_post["Job Description"]  # TODO: Need to account for "placeholder", "Placeholder", & "PLACEHOLDER"
                     )
                 ):
                     selected_new_job_posts.append(job_post)
@@ -334,24 +324,23 @@ class UpwatchGui:
                     job_post["Payment Type"].split()[0] == "Hourly:"
                     and upwatch.extract_hourly_price(job_post["Payment Type"])
                     >= hourly_dbmr_rate
-                    and job_post["Payment Type"].startswith("Hourly: ")
+                    and job_post["Payment Type"].startswith("Hourly:")
                 ):
                     selected_new_job_posts.append(
                         job_post
-                    )  # do I need the last "and" ?)
+                    )
         else:
             for job_post in result:
-                # print(job_post)  # Use this line for debugging
                 if job_post["Payment Type"] == "Fixed-price" and (
                     upwatch.extract_fixed_price(job_post["Budget"]) >= fixed_dbmr_rate
                     or "placeholder" in job_post["Job Description"]
                 ):
                     selected_new_job_posts.append(job_post)
-                elif (
+                elif job_post["Payment Type"] == "Hourly" or (
                     job_post["Payment Type"].split()[0] == "Hourly:"
                     and upwatch.extract_hourly_price(job_post["Payment Type"])
                     >= hourly_dbmr_rate
-                ) or job_post["Payment Type"] == "Hourly:":
+                ):
                     selected_new_job_posts.append(job_post)
 
         print(selected_new_job_posts)

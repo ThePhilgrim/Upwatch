@@ -358,7 +358,7 @@ class UpwatchGui:
 
         self.tray.messageClicked.connect(self.messageClicked)
 
-    def messageClicked(self):
+    def message_clicked(self):
         if self.selected_job_posts_number == 1:
             print(self.current_job_post["Job Title"])  # TODO: Change to webbrowser.open_new_tab(URL)
         else:

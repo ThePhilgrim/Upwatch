@@ -73,64 +73,6 @@ def extract_fixed_price(fixed_payment_type):
         return int(fixed_payment_type.lstrip("$"))
 
 
-def message_printer(json_content, new_job_posts):
-    """ Prints number of new jobs (that satisfy user budget criteria) & their details """
-
-    fixed_lowest_rate = json_content["Fixed Lowest Rate"]
-
-    hourly_lowest_rate = json_content["Hourly Lowest Rate"]
-
-    selected_new_job_posts = []
-
-    for job_post in new_job_posts:
-        # print(job_post)  # Use this line to debug what job post might cause an error. Keep for future debugging as well
-
-        # TODO: If "placeholder" in job description, print it even if less than DBMR
-        # job_post["Payment Type"] can be "Fixed-price", "Hourly: $X.00–$Y.00", or "Hourly"
-        if (
-            job_post["Payment Type"] == "Fixed-price"
-            and extract_fixed_price(job_post["Budget"]) >= fixed_lowest_rate
-        ):
-            selected_new_job_posts.append(job_post)
-        elif (
-            job_post["Payment Type"].split()[0] == "Hourly:"
-            and extract_hourly_price(job_post["Payment Type"]) >= hourly_lowest_rate
-        ) or job_post["Payment Type"] == "Hourly":
-            selected_new_job_posts.append(job_post)
-
-    if len(selected_new_job_posts) == 0:
-        print("No New Job Posts")  # TODO: Remove this and exhange for return
-    elif len(selected_new_job_posts) == 1:
-        print(
-            """There is 1 new job post.
-        """
-        )
-    else:
-        print(
-            f"""There are {len(selected_new_job_posts)} new job posts.
-        """
-        )
-
-    if len(selected_new_job_posts) >= 4:
-        for job_post in selected_new_job_posts:
-            if job_post["Payment Type"] == "Fixed-price":
-                print(
-                    f"{job_post['Job Title']} – {job_post['Payment Type']}: {job_post['Budget']}"
-                )
-            else:
-                print(f"{job_post['Job Title']} – {job_post['Payment Type']}")
-            print(job_post["Job Post URL"] + "\n")
-    else:
-        for job_post in selected_new_job_posts:
-            print(job_post["Job Title"])
-            if job_post["Payment Type"] == "Fixed-price":
-                print(job_post["Payment Type"] + " " + job_post["Budget"])
-            else:
-                print(job_post["Payment Type"])
-            print(job_post["Job Description"][:150] + "...")
-            print(job_post["Job Post URL"] + "\n")
-
-
 def json_difference_checker(json_content, job_post_list):
     """Checks the difference between current scrape and job posts
     stored in json to print any new job posts"""
@@ -143,9 +85,9 @@ def json_difference_checker(json_content, job_post_list):
         if job_post["Job Post URL"] not in old_job_urls
     ]
 
-    message_printer(json_content, new_job_posts)
-
     json_content["Job Posts"] = job_post_list
+
+    return new_job_posts
 
 
 def job_post_scraper(json_content):
@@ -153,7 +95,7 @@ def job_post_scraper(json_content):
     # TODO: Control that input is valid upwork search link. (Regex library)
     # TODO: Tell the user if there is no URL specified when trying to do request
 
-    # Translation URL for testing: https://www.upwork.com/ab/jobs/search/?page=2&q=(translat%20OR%20proofread)%20AND%20swedish&sort=recency
+    # Translation URL for testing: https://www.upwork.com/ab/jobs/search/?from_recent_search=true&q=(translat%20OR%20proofread)%20AND%20swedish&sort=recency
 
     url = json_content["Requests URL"]
 
@@ -224,15 +166,4 @@ def job_post_scraper(json_content):
     if json_content["Job Posts"] is None:
         json_content["Job Posts"] = job_post_list
 
-    json_difference_checker(json_content, job_post_list)
-
-
-def scrape_loop(json_content):
-    """ Calls the web scraping function on a scheduled interval,
-    and sleeps in between for the time specified in json """
-    while json_content["Requests URL"] is None:
-        time.sleep(0.5)  # wait for url to be entered
-    while True:
-        sleep_time = int(json_content["Scrape interval"])
-        job_post_scraper(json_content)
-        time.sleep(sleep_time * 60)
+    return json_difference_checker(json_content, job_post_list)

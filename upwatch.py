@@ -81,11 +81,6 @@ def json_difference_checker(json_content, job_post_list):
         for job_post in job_post_list
         if job_post["Job Post URL"] not in old_job_urls
     ]
-    print("DIFFERENCE CHECKER:")
-    print(" ")
-    print(str(new_job_posts))
-    print(" ")
-    print(" ")
 
     json_content["Job Posts"] = job_post_list
 
@@ -118,7 +113,7 @@ def job_post_scraper(json_content):
             )  # TODO: Figure out how to fetch User Agent on current system.
             response.raise_for_status()
             break
-        except requests.exceptions.HTTPError as errh:
+        except requests.exceptions.HTTPError as errh:  # TODO Error messages need to be communicated to user in a different way.
             print("HTTP Error:", errh)
             print("Please try a different URL")
             return

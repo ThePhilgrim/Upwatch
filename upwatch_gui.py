@@ -61,6 +61,8 @@ class UpwatchGui:
         self.worker_thread.json_content = self.json_content
         self.worker_thread.start()
 
+        self.tray.messageClicked.connect(self.message_clicked)
+
     def set_url(self, window, close_window=False):
         """ Accepts user input URL and stores it in json_content """
         # TODO: VALIDITY CHECK - CHECK QT DESIGNER WIDGET
@@ -282,6 +284,7 @@ class UpwatchGui:
         low_rate_grid.addWidget(self.ignore_no_budget, 2, 0, 1, 2)
 
         self.settings_window.show()
+        self.settings_window.raise_()
 
     # About Window
     def about_window(self):
@@ -298,6 +301,7 @@ class UpwatchGui:
         about_button.setText("Click Here Right Now!")
         about_button.move(65, 105)
         self.about_window.show()
+        self.about_window.raise_()
 
     def on_job_done(self, result):
         fixed_dbmr_rate = self.json_content["Fixed Lowest Rate"]
@@ -342,15 +346,10 @@ class UpwatchGui:
                 ):
                     self.selected_new_job_posts.append(job_post)
 
-        # print(self.selected_new_job_posts)
-
         self.selected_job_posts_number = len(self.selected_new_job_posts)
 
         if self.selected_job_posts_number == 1:
             self.current_job_post = self.selected_new_job_posts[0]
-            print("CURRENT NEW 1")
-            print(" ")
-            print(self.current_job_post)
             if self.current_job_post["Payment Type"] == "Fixed-price":
                 self.tray.showMessage(self.current_job_post["Budget"] + " – " + self.current_job_post["Job Title"], self.current_job_post["Job Description"][:150], self.icon, 10000)
             elif self.current_job_post["Payment Type"].startswith("Hourly:"):
@@ -358,16 +357,12 @@ class UpwatchGui:
             else:
                 self.tray.showMessage(self.current_job_post["Payment Type"] + " – " + self.current_job_post["Job Title"], self.current_job_post["Job Description"][:150], self.icon, 10000)
         elif self.selected_job_posts_number > 1:
-            print("SELE LIST!!!!")
-            print(" ")
-            print(self.selected_new_job_posts)
             self.tray.showMessage(str(self.selected_job_posts_number) + " New Job Posts", "Click here to see job posts.", self.icon, 10000)
 
-        self.tray.messageClicked.connect(self.message_clicked)
+        # self.tray.messageClicked.connect(self.message_clicked)
 
     def message_clicked(self):
         if self.selected_job_posts_number == 1:
-            print(self.current_job_post["Job Post URL"])
             webbrowser.open_new_tab(self.current_job_post["Job Post URL"])
         else:
             print("This will open a dialog window.")

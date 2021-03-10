@@ -15,9 +15,9 @@ def read_from_json():
             return json_content
     except FileNotFoundError:
         json_content = {
-            "Requests URL": None,
+            "Requests URL": "",
             "Run on startup": True,
-            "Scrape interval": 15,
+            "Scrape interval": 5,
             "DBMR": False,
             "Fixed Lowest Rate": 0,
             "Hourly Lowest Rate": 0,
@@ -113,7 +113,7 @@ def job_post_scraper(json_content):
             )  # TODO: Figure out how to fetch User Agent on current system.
             response.raise_for_status()
             break
-        except requests.exceptions.HTTPError as errh:
+        except requests.exceptions.HTTPError as errh:  # TODO Error messages need to be communicated to user in a different way.
             print("HTTP Error:", errh)
             print("Please try a different URL")
             return

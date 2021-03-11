@@ -5,19 +5,49 @@ import threading
 import upwatch
 import time
 import webbrowser
+import sys
+import pathlib
+
+
+def create_startup_plist_file():
+    """ Creates a plist file and saves it as a Launch Agent to run Upwatch on system startup """
+    plist_path = pathlib.Path('~/Library/LaunchAgents').expanduser()
+
+    plist_content = f"""<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>upwatch.gui.py</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>{sys.executable}</string>
+        <string>{__file__}</string>
+    </array>
+    <key>StandardErrorPath</key>
+    <string>/Users/Writing/Desktop/upwatch.error</string>
+    <key>KeepAlive</key>
+    <true/>
+</dict>
+</plist>"""
+
+    with open(str(plist_path / "upwatch_startup.plist"), "w") as startup_plist:
+        startup_plist.write(plist_content)
 
 
 class UpwatchGui:
     def __init__(self, json_content):
         # JSON Dict with URL, Don't Bother Me Rate, Job Posts
         self.json_content = json_content
+        create_startup_plist_file()
 
         # Main Application
         self.app = QtWidgets.QApplication([])
         self.app.setQuitOnLastWindowClosed(False)
 
         # Create the icon
-        self.icon = QtGui.QIcon("uwlogo.png")  # TODO: Fix own logo
+        logo_path = pathlib.Path(__file__).parent
+        self.icon = QtGui.QIcon(str(logo_path / "uwlogo.png"))  # TODO: Fix own logo
 
         # Create the tray
         self.tray = QtWidgets.QSystemTrayIcon()
@@ -131,7 +161,7 @@ class UpwatchGui:
 
     def close_program(self):
         """ Closes Upwatch """
-        upwatch.write_to_json(self.json_content)
+        upwatch.write_to_json(self.json_content, json_path)
         self.app.quit()
 
     # TODO: Make sure set_url_window shows up under the Upwatch Icon!
@@ -205,7 +235,7 @@ class UpwatchGui:
         )
         self.scrape_interval_label.adjustSize()
         self.scrape_interval = QtWidgets.QComboBox(self.settings_window)
-        self.scrape_interval.addItems(["1", "3", "5", "10", "20", "30"])
+        self.scrape_interval.addItems(["5", "10", "20", "30", "45", "60"])
         self.scrape_interval.setCurrentText(str(json_content["Scrape interval"]))
         self.scrape_interval.currentIndexChanged.connect(self.set_scrape_interval)
 
@@ -359,7 +389,9 @@ class UpwatchGui:
         elif self.selected_job_posts_number > 1:
             self.tray.showMessage(str(self.selected_job_posts_number) + " New Job Posts", "Click here to see job posts.", self.icon, 10000)
 
-        # self.tray.messageClicked.connect(self.message_clicked)
+        print(len(self.selected_new_job_posts))
+        for job in self.selected_new_job_posts:
+            print(job)
 
     def message_clicked(self):
         if self.selected_job_posts_number == 1:
@@ -385,11 +417,12 @@ class WorkerThread(QtCore.QThread):
             sleep_time = int(self.json_content["Scrape interval"])
             new_job_posts = upwatch.job_post_scraper(self.json_content)
             self.job_done.emit(new_job_posts)
-            print("job done. Sleeping")
+            print("job done. Sleeping " + str(sleep_time) + " minute(s).")
             time.sleep(sleep_time * 60)
             print("Let's go again")
 
 
-json_content = upwatch.read_from_json()
+json_path = pathlib.Path(__file__).parent
+json_content = upwatch.read_from_json(json_path)
 gui = UpwatchGui(json_content)
 gui.app.exec_()

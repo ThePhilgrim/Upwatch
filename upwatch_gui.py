@@ -10,10 +10,11 @@ import pathlib
 
 
 # TODO: Make "run on startup" system independent
-# TODO: Find where to save .error file
 def manage_startup_plist_file(json_content):
     """ Creates a plist file and saves it as a Launch Agent to run Upwatch on system startup """
     plist_path = pathlib.Path('~/Library/LaunchAgents').expanduser()
+
+    error_path = pathlib.Path(__file__).parent / "upwatch.error"
 
     plist_content = f"""<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -27,7 +28,7 @@ def manage_startup_plist_file(json_content):
         <string>{__file__}</string>
     </array>
     <key>StandardErrorPath</key>
-    <string>/Users/Writing/Desktop/upwatch.error</string>
+    <string>{error_path}</string>
     <key>RunAtLoad</key>
     <true/>
 </dict>
@@ -45,10 +46,10 @@ class UpwatchGui:
         # JSON Dict with URL, Don't Bother Me Rate, Job Posts
         self.json_content = json_content
         self.json_found = json_found
-        # manage_startup_plist_file(self.json_content)
 
-        # if json_found is False:
-        #     manage_startup_plist_file(self.json_content)
+        # Creates upwatch_startup.plist first time program is run
+        if json_found is False:
+            manage_startup_plist_file(self.json_content)
 
         # Main Application
         self.app = QtWidgets.QApplication([])

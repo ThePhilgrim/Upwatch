@@ -9,7 +9,9 @@ import sys
 import pathlib
 
 
-def create_startup_plist_file():
+# TODO: Make "run on startup" system independent
+# TODO: Find where to save .error file
+def manage_startup_plist_file(json_content):
     """ Creates a plist file and saves it as a Launch Agent to run Upwatch on system startup """
     plist_path = pathlib.Path('~/Library/LaunchAgents').expanduser()
 
@@ -26,20 +28,27 @@ def create_startup_plist_file():
     </array>
     <key>StandardErrorPath</key>
     <string>/Users/Writing/Desktop/upwatch.error</string>
-    <key>KeepAlive</key>
+    <key>RunAtLoad</key>
     <true/>
 </dict>
 </plist>"""
 
-    with open(str(plist_path / "upwatch_startup.plist"), "w") as startup_plist:
-        startup_plist.write(plist_content)
+    if not pathlib.Path(str(plist_path / "upwatch_startup.plist")).exists() and json_content["Run on startup"] is True:
+        with open(str(plist_path / "upwatch_startup.plist"), "w") as startup_plist:
+            startup_plist.write(plist_content)
+    elif pathlib.Path(str(plist_path / "upwatch_startup.plist")).exists() and json_content["Run on startup"] is False:
+        pathlib.Path(str(plist_path / "upwatch_startup.plist")).unlink()
 
 
 class UpwatchGui:
-    def __init__(self, json_content):
+    def __init__(self, json_content, json_found):
         # JSON Dict with URL, Don't Bother Me Rate, Job Posts
         self.json_content = json_content
-        create_startup_plist_file()
+        self.json_found = json_found
+        # manage_startup_plist_file(self.json_content)
+
+        # if json_found is False:
+        #     manage_startup_plist_file(self.json_content)
 
         # Main Application
         self.app = QtWidgets.QApplication([])
@@ -124,6 +133,8 @@ class UpwatchGui:
             self.json_content["Run on startup"] = False
         else:
             self.json_content["Run on startup"] = True
+
+        manage_startup_plist_file(self.json_content)
 
     def set_scrape_interval(self):
         """ Sets the 'Scrape interval' state in json """
@@ -423,6 +434,8 @@ class WorkerThread(QtCore.QThread):
 
 
 json_path = pathlib.Path(__file__).parent
-json_content = upwatch.read_from_json(json_path)
-gui = UpwatchGui(json_content)
+read_from_json = upwatch.read_from_json(json_path)
+json_content = read_from_json[0]
+json_found = read_from_json[1]
+gui = UpwatchGui(json_content, json_found)
 gui.app.exec_()

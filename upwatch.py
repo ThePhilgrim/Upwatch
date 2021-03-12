@@ -13,8 +13,10 @@ def read_from_json(json_path):
     try:
         with open(json_path / "job_posts.json", "r") as job_posts_json:
             json_content = json.load(job_posts_json)
-            return json_content
+            json_found = True
+            return json_content, json_found
     except FileNotFoundError:
+        json_found = False
         json_content = {
             "Requests URL": "",
             "Run on startup": True,
@@ -25,7 +27,7 @@ def read_from_json(json_path):
             "Ignore no budget": False,
             "Job Posts": None,
         }
-        return json_content
+        return json_content, json_found
 
 
 def write_to_json(json_content, json_path):

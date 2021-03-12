@@ -34,7 +34,7 @@ def manage_startup_plist_file(json_content):
 </dict>
 </plist>"""
 
-    if not pathlib.Path(str(plist_path / "upwatch_startup.plist")).exists() and json_content["Run on startup"] is True:
+    if not (plist_path / "upwatch_startup.plist").exists() and json_content["Run on startup"]:
         with open(str(plist_path / "upwatch_startup.plist"), "w") as startup_plist:
             startup_plist.write(plist_content)
     elif pathlib.Path(str(plist_path / "upwatch_startup.plist")).exists() and json_content["Run on startup"] is False:

@@ -48,7 +48,7 @@ class UpwatchGui:
         self.json_found = json_found
 
         # Creates upwatch_startup.plist first time program is run
-        if json_found is False:
+        if not json_found:
             manage_startup_plist_file(self.json_content)
 
         # Main Application

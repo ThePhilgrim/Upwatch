@@ -435,8 +435,6 @@ class WorkerThread(QtCore.QThread):
 
 
 json_path = pathlib.Path(__file__).parent
-read_from_json = upwatch.read_from_json(json_path)
-json_content = read_from_json[0]
-json_found = read_from_json[1]
+json_content, json_found = upwatch.read_from_json(json_path)
 gui = UpwatchGui(json_content, json_found)
 gui.app.exec_()

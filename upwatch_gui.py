@@ -399,37 +399,52 @@ class UpwatchGui:
                 "Job Post URL": "https://upwork.com/job/Sweden-Swedish-Content-Writer_~01b0323a40ce25283f/",
             },
         ]
-        self.job_post_dialog = QtWidgets.QDialog()
-        dialog_grid = QtWidgets.QGridLayout()
-        self.job_post_dialog.setLayout(dialog_grid)
 
-        self.job_post_dialog.setWindowFlags(
-            QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint
-        )
+        self.scroll_area = QtWidgets.QScrollArea(widgetResizable=True)
+        self.widget = QtWidgets.QWidget()
+        self.scroll_area.setWidget(self.widget)
+        self.vbox = QtWidgets.QVBoxLayout()
+        self.widget.setLayout(self.vbox)
 
-        grid_row = 0
+        self.scroll_area.setFixedWidth(300)
+        self.scroll_area.setMinimumHeight(400)
+        self.scroll_area.setMaximumHeight(600)
+
+        # TODO: Bind escape & enter to close window
+        # self.scroll_area.setWindowFlags(
+        #     QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint
+        # )
+
+        font_style = QtGui.QFont()
+        font_style.setBold(True)
+
         for job_post in test_list:
-            title = QtWidgets.QLabel(job_post["Job Title"])
+            groupbox = QtWidgets.QGroupBox()
+            groupbox_layout = QtWidgets.QVBoxLayout()
+            groupbox.setLayout(groupbox_layout)
+
+            title = QtWidgets.QLabel()
+            title.setText(job_post["Job Title"])
+            title.setWordWrap(True)
+            title.setFont(font_style)
+
             payment = QtWidgets.QLabel()
             if job_post["Budget"]:
-                payment.setText(job_post["Payment Type"] + ": " + job_post["Budget"])
+                payment.setText(job_post["Payment Type"] + ": " + job_post["Budget"] + "\n")
             else:
-                payment.setText(job_post["Payment Type"])
+                payment.setText(job_post["Payment Type"] + "\n")
+            payment.setWordWrap(True)
             description = QtWidgets.QLabel()
-            description.setText(job_post["Job Description"])
+            description.setText(job_post["Job Description"][:150] + "\n")
             description.setWordWrap(True)
-            url = QtWidgets.QLabel(job_post["Job Post URL"])
-            empty_space = QtWidgets.QLabel("")  # Change this for a proper way to add space
+            # url = QtWidgets.QLabel(job_post["Job Post URL"])
 
-            dialog_grid.addWidget(title, grid_row, 0)
-            dialog_grid.addWidget(payment, grid_row + 1, 0)
-            dialog_grid.addWidget(description, grid_row + 2, 0, alignment=QtCore.Qt.AlignTop)
-            dialog_grid.addWidget(empty_space, grid_row + 3, 0)
-            grid_row += 4
+            self.vbox.addWidget(groupbox)
+            groupbox_layout.addWidget(title)
+            groupbox_layout.addWidget(payment)
+            groupbox_layout.addWidget(description)
 
-        self.job_post_dialog.setFixedWidth(200)
-        self.job_post_dialog.setFixedHeight(600)
-        self.job_post_dialog.show()
+        self.scroll_area.show()
 
     def on_job_done(self, result):
         fixed_dbmr_rate = self.json_content["Fixed Lowest Rate"]

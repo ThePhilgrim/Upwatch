@@ -1,6 +1,7 @@
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
+from functools import partial
 import threading
 import upwatch
 import time
@@ -109,7 +110,8 @@ class UpwatchGui:
 
         self.tray.messageClicked.connect(self.message_clicked)
 
-        self.job_post_dialog()
+    def test_func(self, url, event):
+        webbrowser.open_new_tab(url)
 
     def set_url(self, window, close_window=False):
         """ Accepts user input URL and stores it in json_content """
@@ -355,51 +357,6 @@ class UpwatchGui:
         self.about_window.raise_()
 
     def job_post_dialog(self):
-        test_list = [
-            {
-                "Job Title": "Word proofreading in swedish",
-                "Payment Type": "Fixed-price",
-                "Budget": "$20",
-                "Job Description": "Hi\uff0cIts a testing offer for tagging 1000 swedish entry.we have 50k entry in all\nit will take 2 hours to finish.\nif you were available for this proofreading testing task and deliver in 24hours,pls contact me",
-                "Job Post URL": "https://upwork.com/job/Word-proofreading-swedish_~016583dfed33df1f13/",
-            },
-            {
-                "Job Title": "Translator for website pages",
-                "Payment Type": "Hourly",
-                "Budget": "",
-                "Job Description": "We are looking for a translator for our website who has experience with translating product pages.\n\nWe need translations in French, Portuguese, German (including Austrian German and Swiss German), Polish, Italian, Swedish and Danish.\n\nWe like you to use DeepL translation software and then improve the results with your profound (native tongue) knowledge of the language. It is important to us that obvious mistakes because of cultural differences are averted. The type of translation that we have are product pages on our website. \n\nIf you are interested please send a message with your cv and motivation.",
-                "Job Post URL": "https://upwork.com/job/Translator-for-website-pages_~016384e94218b10bd6/",
-            },
-            {
-                "Job Title": "Help to make WooCommerce site multi lingual and add option to customize emails",
-                "Payment Type": "Hourly: $10.00-$40.00",
-                "Budget": "",
-                "Job Description": "We run a WooCommerce webshop in Swedish. We want the help to install the needed plugins and setup the site to be multi lingual. We want to be able to completely translate all aspects of the site to English so that the site can be viewed in both English and Swedish. \n\nWe also want to be able to customize the emails that are sent out to the customers upon purchases, upon status changes of their orders. There are some plugins available, but we can't figure out how to actually customize the emails for each language in use on the site (Swedish, English). We don't want English customers to receive Swedish customized emails and vice versa.\n\nThe hired developer must make it so easy for us with all pre-work backend, so that we can with ease start translating the site and customize the emails from WooCommerce. \n",
-                "Job Post URL": "https://upwork.com/job/Help-make-WooCommerce-site-multi-lingual-and-add-option-customize-emails_~014010992d290637c2/",
-            },
-            {
-                "Job Title": "Native English / Swedish speaker for translations, proofreading & SEO writing",
-                "Payment Type": "Hourly: $20.00-$32.00",
-                "Budget": "",
-                "Job Description": "We are looking for a native English / Swedish speaker for translations, proofreading, SEO writing, editing and localization for our e-commerce website.\nThe site consist of product listings, blog posts, relevant articles about the bike industry and product news. The scope of the project is estimated at 10+ hours / week with the projection of an increase after the initial stage.",
-                "Job Post URL": "https://upwork.com/job/Native-English-Swedish-speaker-for-translations-proofreading-amp-SEO-writing_~01fda23f2807a603c6/",
-            },
-            {
-                "Job Title": "Oversette tekster nettbutikk til dansk og svensk",
-                "Payment Type": "Fixed-price",
-                "Budget": "$60",
-                "Job Description": "Hei,\n\nNettbutikken v\u00e5r www.studystore.no starter snart med salg til Danmark og Sverige. I den forbindelse trenger vi \u00e5 oversette samtlige produkttekster, samt bloggen (studiteknikk-kategorien) til svensk og dansk. \n\nGjerne bes\u00f8k nettsiden og send oss en estimert pris for jobben. Vi vil ogs\u00e5 ha behov for fremtidige oversettelser da det stadig vil komme nye tekster.",
-                "Job Post URL": "https://upwork.com/job/Oversette-tekster-nettbutikk-til-dansk-svensk_~01241deff533c6d371/",
-            },
-            {
-                "Job Title": "Sweden- Swedish  Content  Writer",
-                "Payment Type": "Fixed-price",
-                "Budget": "$50",
-                "Job Description": "This job will include Content Writing as per the guidelines. \nWord count will be as per the requirement of the article. \nArticle Budget will be variable according to the word count. \nMore details are attached.",
-                "Job Post URL": "https://upwork.com/job/Sweden-Swedish-Content-Writer_~01b0323a40ce25283f/",
-            },
-        ]
-
         self.scroll_area = QtWidgets.QScrollArea(widgetResizable=True)
         self.widget = QtWidgets.QWidget()
         self.scroll_area.setWidget(self.widget)
@@ -418,10 +375,10 @@ class UpwatchGui:
         font_style = QtGui.QFont()
         font_style.setBold(True)
 
-        for job_post in test_list:
-            groupbox = QtWidgets.QGroupBox()
-            groupbox_layout = QtWidgets.QVBoxLayout()
-            groupbox.setLayout(groupbox_layout)
+        for job_post in self.selected_new_job_posts:
+            self.dialog_groupbox = QtWidgets.QGroupBox()
+            self.groupbox_layout = QtWidgets.QVBoxLayout()
+            self.dialog_groupbox.setLayout(self.groupbox_layout)
 
             title = QtWidgets.QLabel()
             title.setText(job_post["Job Title"])
@@ -437,12 +394,14 @@ class UpwatchGui:
             description = QtWidgets.QLabel()
             description.setText(job_post["Job Description"][:150] + "\n")
             description.setWordWrap(True)
-            # url = QtWidgets.QLabel(job_post["Job Post URL"])
+            url = job_post["Job Post URL"]
 
-            self.vbox.addWidget(groupbox)
-            groupbox_layout.addWidget(title)
-            groupbox_layout.addWidget(payment)
-            groupbox_layout.addWidget(description)
+            self.vbox.addWidget(self.dialog_groupbox)
+            self.groupbox_layout.addWidget(title)
+            self.groupbox_layout.addWidget(payment)
+            self.groupbox_layout.addWidget(description)
+
+            self.dialog_groupbox.mousePressEvent = partial(self.test_func, url)
 
         self.scroll_area.show()
 
@@ -525,15 +484,11 @@ class UpwatchGui:
                 10000,
             )
 
-        print(len(self.selected_new_job_posts))
-        for job in self.selected_new_job_posts:
-            print(job)
-
     def message_clicked(self):
         if self.selected_job_posts_number == 1:
             webbrowser.open_new_tab(self.current_job_post["Job Post URL"])
         else:
-            print("This will open a dialog window.")
+            self.job_post_dialog()
 
 
 class WorkerThread(QtCore.QThread):

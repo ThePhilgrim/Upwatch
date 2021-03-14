@@ -1,6 +1,7 @@
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
+from functools import partial
 import threading
 import upwatch
 import time
@@ -12,7 +13,7 @@ import pathlib
 # TODO: Make "run on startup" system independent
 def manage_startup_plist_file(json_content):
     """ Creates a plist file and saves it as a Launch Agent to run Upwatch on system startup """
-    plist_path = pathlib.Path('~/Library/LaunchAgents').expanduser()
+    plist_path = pathlib.Path("~/Library/LaunchAgents").expanduser()
 
     error_path = pathlib.Path(__file__).parent / "upwatch.error"
 
@@ -54,6 +55,7 @@ class UpwatchGui:
         # Main Application
         self.app = QtWidgets.QApplication([])
         self.app.setQuitOnLastWindowClosed(False)
+        # self.app.setStyleSheet('QGroupBox {background-color: #FF0000;}')
 
         # Create the icon
         logo_path = pathlib.Path(__file__).parent
@@ -103,10 +105,12 @@ class UpwatchGui:
 
         self.tray.messageClicked.connect(self.message_clicked)
 
+    def test_func(self, url, event):
+        webbrowser.open_new_tab(url)
+
     def set_url(self, window, close_window=False):
         """ Accepts user input URL and stores it in json_content """
         # TODO: VALIDITY CHECK - CHECK QT DESIGNER WIDGET
-        # if len(self.json_content["Requests URL"]) > 0:
         if len(window.text()) > 0:
             self.json_content["Requests URL"] = window.text()
         else:
@@ -131,6 +135,7 @@ class UpwatchGui:
     def set_startup_state(self):
         """ Enables / Disables 'Run on startup' in json """
         if self.json_content["Run on startup"] is True:
+            # TODO: Create "are you sure"-window
             self.json_content["Run on startup"] = False
         else:
             self.json_content["Run on startup"] = True
@@ -147,6 +152,8 @@ class UpwatchGui:
             self.json_content["DBMR"] = True
         else:
             self.json_content["DBMR"] = False
+            self.fixed_low_rate.clear()
+            self.hourly_low_rate.clear()
             self.json_content["Fixed Lowest Rate"] = 0
             self.json_content["Hourly Lowest Rate"] = 0
 
@@ -185,8 +192,7 @@ class UpwatchGui:
         self.paste_url = QtWidgets.QLineEdit(self.set_url_window)
         self.paste_url.setPlaceholderText("Paste Valid Upwork URL here")
         self.set_url_window.setGeometry(750, 0, 200, 30)
-        self.paste_url.resize(200, 30)
-        # self.set_url_window.QtWidgets.setCentralWidget(self.paste_url)  # TODO: FIX THIS INSTEAD OF RESIZE ON PREVIOUS LINE
+        self.paste_url.resize(200, 30)  # Makes QLineEdit fill size of dialog window
         self.paste_url.returnPressed.connect(lambda: self.set_url(self.paste_url, True))
         self.set_url_window.setWindowFlags(
             QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint
@@ -206,7 +212,7 @@ class UpwatchGui:
         self.settings_window.setLayout(grid)
 
         # URL Text Input label
-        self.settings_label_url = QtWidgets.QLabel(self.settings_window)
+        self.settings_label_url = QtWidgets.QLabel()
         self.settings_label_url.setText("Paste Upwork URL Here")
         self.settings_label_url.setToolTip(
             """Apply appropriate filters for your job on Upwork
@@ -214,7 +220,7 @@ class UpwatchGui:
         )
 
         # URL Text Input Box
-        self.settings_line_edit = QtWidgets.QLineEdit(self.settings_window)
+        self.settings_line_edit = QtWidgets.QLineEdit()
         self.settings_line_edit.setPlaceholderText("https://www.upwork.com/...")
         if self.json_content["Requests URL"]:
             self.print_url_qline(self.settings_line_edit)
@@ -223,16 +229,16 @@ class UpwatchGui:
         )
 
         # Separator lines
-        self.separator = QtWidgets.QFrame(self.settings_window)
+        self.separator = QtWidgets.QFrame()
         self.separator.setFrameShape(QtWidgets.QFrame.HLine)
         self.separator.setFrameShadow(QtWidgets.QFrame.Sunken)
 
-        self.separator_2 = QtWidgets.QFrame(self.settings_window)
+        self.separator_2 = QtWidgets.QFrame()
         self.separator_2.setFrameShape(QtWidgets.QFrame.HLine)
         self.separator_2.setFrameShadow(QtWidgets.QFrame.Sunken)
 
         # Run program on startup
-        self.run_on_startup = QtWidgets.QCheckBox(self.settings_window)
+        self.run_on_startup = QtWidgets.QCheckBox()
         self.run_on_startup.setText("Run Upwatch on system startup")
         self.run_on_startup.adjustSize()
         self.run_on_startup.setChecked(json_content["Run on startup"])
@@ -241,18 +247,18 @@ class UpwatchGui:
         # TODO: Add "Are you sure"-dialog if unchecked
 
         # Set scraping interval
-        self.scrape_interval_label = QtWidgets.QLabel(self.settings_window)
+        self.scrape_interval_label = QtWidgets.QLabel()
         self.scrape_interval_label.setText(
             "How often should Upwatch check \nfor new job posts? (minutes)"
         )
         self.scrape_interval_label.adjustSize()
-        self.scrape_interval = QtWidgets.QComboBox(self.settings_window)
+        self.scrape_interval = QtWidgets.QComboBox()
         self.scrape_interval.addItems(["5", "10", "20", "30", "45", "60"])
         self.scrape_interval.setCurrentText(str(json_content["Scrape interval"]))
         self.scrape_interval.currentIndexChanged.connect(self.set_scrape_interval)
 
         # Don't Bother Me Rate groupBox
-        self.low_rate_groupbox = QtWidgets.QGroupBox(self.settings_window)
+        self.low_rate_groupbox = QtWidgets.QGroupBox()
         self.low_rate_groupbox.setFlat(True)
         self.low_rate_groupbox.setCheckable(True)
         self.low_rate_groupbox.setChecked(json_content["DBMR"])
@@ -345,6 +351,62 @@ class UpwatchGui:
         self.about_window.show()
         self.about_window.raise_()
 
+    def job_post_dialog(self):
+        self.scroll_area = QtWidgets.QScrollArea(widgetResizable=True)
+        self.widget = QtWidgets.QWidget()
+        self.scroll_area.setWidget(self.widget)
+        self.vbox = QtWidgets.QVBoxLayout()
+        self.widget.setLayout(self.vbox)
+
+        self.scroll_area.setFixedWidth(300)
+        self.scroll_area.setFixedHeight(600)
+
+        # TODO: Bind escape & enter to close window
+        # self.scroll_area.setWindowFlags(
+        #     QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint
+        # )
+
+        font_style = QtGui.QFont()
+        font_style.setBold(True)
+
+        for job_post in self.selected_new_job_posts:
+            self.dialog_groupbox = QtWidgets.QGroupBox(objectName="job_post_box")
+            self.groupbox_layout = QtWidgets.QVBoxLayout()
+            self.dialog_groupbox.setLayout(self.groupbox_layout)
+            self.dialog_groupbox.setMouseTracking(True)
+            # self.dialog_groupbox.enterEvent = print
+            # self.dialog_groupbox.leaveEvent = print
+
+            title = QtWidgets.QLabel()
+            title.setText(job_post["Job Title"])
+            title.setWordWrap(True)
+            title.setFont(font_style)
+
+            payment = QtWidgets.QLabel()
+            if job_post["Budget"]:
+                payment.setText(
+                    job_post["Payment Type"] + ": " + job_post["Budget"] + "\n"
+                )
+            else:
+                payment.setText(job_post["Payment Type"] + "\n")
+            payment.setWordWrap(True)
+
+            description = QtWidgets.QLabel()
+            description.setText(
+                job_post["Job Description"][:150].replace("\n\n", "\n") + "...\n"
+            )
+            description.setWordWrap(True)
+            url = job_post["Job Post URL"]
+
+            self.vbox.addWidget(self.dialog_groupbox)
+            self.groupbox_layout.addWidget(title)
+            self.groupbox_layout.addWidget(payment)
+            self.groupbox_layout.addWidget(description)
+
+            self.dialog_groupbox.mousePressEvent = partial(self.test_func, url)
+
+        self.scroll_area.show()
+
     def on_job_done(self, result):
         fixed_dbmr_rate = self.json_content["Fixed Lowest Rate"]
 
@@ -361,10 +423,7 @@ class UpwatchGui:
                     and (
                         upwatch.extract_fixed_price(job_post["Budget"])
                         >= fixed_dbmr_rate
-                        or "placeholder"
-                        in job_post[
-                            "Job Description"
-                        ].lower()
+                        or "placeholder" in job_post["Job Description"].lower()
                     )
                 ):
                     self.selected_new_job_posts.append(job_post)
@@ -393,23 +452,45 @@ class UpwatchGui:
         if self.selected_job_posts_number == 1:
             self.current_job_post = self.selected_new_job_posts[0]
             if self.current_job_post["Payment Type"] == "Fixed-price":
-                self.tray.showMessage(self.current_job_post["Budget"] + " – " + self.current_job_post["Job Title"], self.current_job_post["Job Description"][:150], self.icon, 10000)
+                self.tray.showMessage(
+                    self.current_job_post["Budget"]
+                    + " – "
+                    + self.current_job_post["Job Title"],
+                    self.current_job_post["Job Description"][:150],
+                    self.icon,
+                    10000,
+                )
             elif self.current_job_post["Payment Type"].startswith("Hourly:"):
-                self.tray.showMessage(self.current_job_post["Budget"] + ": " + self.current_job_post["Job Title"], self.current_job_post["Job Description"][:150], self.icon, 10000)  # TODO: Title not shown right until todo in upwatch.py is fixed
+                self.tray.showMessage(
+                    self.current_job_post["Budget"]
+                    + ": "
+                    + self.current_job_post["Job Title"],
+                    self.current_job_post["Job Description"][:150],
+                    self.icon,
+                    10000,
+                )  # TODO: Title not shown right until todo in upwatch.py is fixed
             else:
-                self.tray.showMessage(self.current_job_post["Payment Type"] + " – " + self.current_job_post["Job Title"], self.current_job_post["Job Description"][:150], self.icon, 10000)
+                self.tray.showMessage(
+                    self.current_job_post["Payment Type"]
+                    + " – "
+                    + self.current_job_post["Job Title"],
+                    self.current_job_post["Job Description"][:150],
+                    self.icon,
+                    10000,
+                )
         elif self.selected_job_posts_number > 1:
-            self.tray.showMessage(str(self.selected_job_posts_number) + " New Job Posts", "Click here to see job posts.", self.icon, 10000)
-
-        print(len(self.selected_new_job_posts))
-        for job in self.selected_new_job_posts:
-            print(job)
+            self.tray.showMessage(
+                str(self.selected_job_posts_number) + " New Job Posts",
+                "Click here to see job posts.",
+                self.icon,
+                10000,
+            )
 
     def message_clicked(self):
         if self.selected_job_posts_number == 1:
             webbrowser.open_new_tab(self.current_job_post["Job Post URL"])
         else:
-            print("This will open a dialog window.")
+            self.job_post_dialog()
 
 
 class WorkerThread(QtCore.QThread):

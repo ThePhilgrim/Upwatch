@@ -61,6 +61,7 @@ class UpwatchGui:
         # Main Application
         self.app = QtWidgets.QApplication([])
         self.app.setQuitOnLastWindowClosed(False)
+        # self.app.setStyleSheet('QGroupBox {background-color: #FF0000;}')
 
         # Create the icon
         logo_path = pathlib.Path(__file__).parent
@@ -364,8 +365,7 @@ class UpwatchGui:
         self.widget.setLayout(self.vbox)
 
         self.scroll_area.setFixedWidth(300)
-        self.scroll_area.setMinimumHeight(400)
-        self.scroll_area.setMaximumHeight(600)
+        self.scroll_area.setFixedHeight(600)
 
         # TODO: Bind escape & enter to close window
         # self.scroll_area.setWindowFlags(
@@ -376,9 +376,12 @@ class UpwatchGui:
         font_style.setBold(True)
 
         for job_post in self.selected_new_job_posts:
-            self.dialog_groupbox = QtWidgets.QGroupBox()
+            self.dialog_groupbox = QtWidgets.QGroupBox(objectName="job_post_box")
             self.groupbox_layout = QtWidgets.QVBoxLayout()
             self.dialog_groupbox.setLayout(self.groupbox_layout)
+            self.dialog_groupbox.setMouseTracking(True)
+            # self.dialog_groupbox.enterEvent = print
+            # self.dialog_groupbox.leaveEvent = print
 
             title = QtWidgets.QLabel()
             title.setText(job_post["Job Title"])
@@ -387,12 +390,17 @@ class UpwatchGui:
 
             payment = QtWidgets.QLabel()
             if job_post["Budget"]:
-                payment.setText(job_post["Payment Type"] + ": " + job_post["Budget"] + "\n")
+                payment.setText(
+                    job_post["Payment Type"] + ": " + job_post["Budget"] + "\n"
+                )
             else:
                 payment.setText(job_post["Payment Type"] + "\n")
             payment.setWordWrap(True)
+
             description = QtWidgets.QLabel()
-            description.setText(job_post["Job Description"][:150] + "\n")
+            description.setText(
+                job_post["Job Description"][:150].replace("\n\n", "\n") + "...\n"
+            )
             description.setWordWrap(True)
             url = job_post["Job Post URL"]
 

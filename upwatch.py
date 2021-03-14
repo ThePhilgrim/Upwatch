@@ -3,31 +3,34 @@ from bs4 import BeautifulSoup
 import json
 import time
 
+
 # !import re  # For looking for eventual word counts in job posts & controlling the validity of url input.
 
 
 # TODO: Add to json: user agent
-def read_from_json():
+def read_from_json(json_path):
     """ Reads all the job posts from job_posts.json """
     try:
-        with open("job_posts.json", "r") as job_posts_json:
+        with open(json_path / "job_posts.json", "r") as job_posts_json:
             json_content = json.load(job_posts_json)
-            return json_content
+            json_found = True
+            return json_content, json_found
     except FileNotFoundError:
+        json_found = False
         json_content = {
             "Requests URL": "",
             "Run on startup": True,
-            "Scrape interval": 5,
+            "Scrape interval": 10,
             "DBMR": False,
             "Fixed Lowest Rate": 0,
             "Hourly Lowest Rate": 0,
             "Ignore no budget": False,
             "Job Posts": None,
         }
-        return json_content
+        return json_content, json_found
 
 
-def write_to_json(json_content):
+def write_to_json(json_content, json_path):
     """ Writes the latest web scrape and UserInput data to job_posts.json """
     json_dict = {
         "Requests URL": json_content["Requests URL"],
@@ -39,7 +42,7 @@ def write_to_json(json_content):
         "Ignore no budget": json_content["Ignore no budget"],
         "Job Posts": json_content["Job Posts"],
     }
-    with open("job_posts.json", "w") as json_dump:
+    with open(json_path / "job_posts.json", "w") as json_dump:
         json.dump(json_dict, json_dump, indent=4)
 
 
@@ -93,6 +96,7 @@ def job_post_scraper(json_content):
     # TODO: Tell the user if there is no URL specified when trying to do request
 
     # Translation URL for testing: https://www.upwork.com/ab/jobs/search/?from_recent_search=true&q=(translat%20OR%20proofread)%20AND%20swedish&sort=recency
+    # Logo URL for testing: https://www.upwork.com/ab/jobs/search/?q=logo&sort=recency
 
     url = json_content["Requests URL"]
 
@@ -166,3 +170,19 @@ def job_post_scraper(json_content):
         json_content["Job Posts"] = job_post_list
 
     return json_difference_checker(json_content, job_post_list)
+
+
+"""
+
+XML-file Run on Startup Todo list:
+
+On program startup first time (if there is no json maybe?), create xml file
+as standard is to run on startup.
+
+File needs to be created in the right place depending on system – Appdirs?
+
+XML creation should be a function in upwatch.py
+
+State from settings window will call separate function (load/unload keywoard?)
+
+"""

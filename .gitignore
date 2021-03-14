@@ -133,3 +133,6 @@ dmypy.json
 
 # File with scraped job posts – Created upon execution
 job_posts.json
+
+# Error file created with plist (run on startup-feature)
+upwatch.error

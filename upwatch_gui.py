@@ -351,6 +351,12 @@ class UpwatchGui:
         self.about_window.show()
         self.about_window.raise_()
 
+    def enter_box(self, partialed, event):
+        partialed.setStyleSheet('text-decoration: underline;')
+
+    def exit_box(self, partialed, event):
+        partialed.setStyleSheet('text-decoration: none;')
+
     def job_post_dialog(self):
         self.scroll_area = QtWidgets.QScrollArea(widgetResizable=True)
         self.widget = QtWidgets.QWidget()
@@ -374,13 +380,14 @@ class UpwatchGui:
             self.groupbox_layout = QtWidgets.QVBoxLayout()
             self.dialog_groupbox.setLayout(self.groupbox_layout)
             self.dialog_groupbox.setMouseTracking(True)
-            # self.dialog_groupbox.enterEvent = print
-            # self.dialog_groupbox.leaveEvent = print
 
             title = QtWidgets.QLabel()
             title.setText(job_post["Job Title"])
             title.setWordWrap(True)
             title.setFont(font_style)
+
+            self.dialog_groupbox.enterEvent = partial(self.enter_box, title)
+            self.dialog_groupbox.leaveEvent = partial(self.exit_box, title)
 
             payment = QtWidgets.QLabel()
             if job_post["Budget"]:
@@ -405,6 +412,7 @@ class UpwatchGui:
 
             self.dialog_groupbox.mousePressEvent = partial(self.test_func, url)
 
+        self.scroll_area.move(800, 0)
         self.scroll_area.show()
 
     def on_job_done(self, result):

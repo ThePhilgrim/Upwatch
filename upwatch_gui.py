@@ -75,6 +75,7 @@ class AppCore:
         self.app.setQuitOnLastWindowClosed(False)
 
         settings = SettingsWindow(self.json_content)
+        about = AboutWindow()
 
         # Create the icon
         logo_path = pathlib.Path(__file__).parent
@@ -94,11 +95,11 @@ class AppCore:
         self.actions.append(url_action)
 
         settings_action = QtWidgets.QAction("Settings")
-        settings_action.triggered.connect(lambda: settings.window.show())
+        settings_action.triggered.connect(lambda: self.show_raise_window(settings.window))
         self.actions.append(settings_action)
 
         about_action = QtWidgets.QAction("About")
-        about_action.triggered.connect(self.about_window)
+        about_action.triggered.connect(lambda: self.show_raise_window(about.window))
         self.actions.append(about_action)
 
         # Add a Quit option to the menu.
@@ -123,6 +124,10 @@ class AppCore:
         self.worker_thread.start()
 
         self.tray.messageClicked.connect(self.message_clicked)
+
+    def show_raise_window(self, window):
+        window.show()
+        window.raise_()
 
     def test_func(self, url, event):  # get errors from moving this out from class
         webbrowser.open_new_tab(url)
@@ -156,23 +161,6 @@ class AppCore:
             print_url_qline(self.json_content, self.paste_url)
         self.set_url_window.show()
         # TODO: Add "QRegexpValidator − Checks input against a Regex expression"
-
-    # About Window
-    def about_window(self):
-        """ Creates program's About window """
-        self.about_window = QtWidgets.QWidget()
-        self.about_window.setWindowTitle("About")
-        self.about_window.setGeometry(300, 300, 300, 300)
-
-        about_label = QtWidgets.QLabel(self.about_window)
-        about_label.setText("Created by The Philgrim")
-        about_label.move(75, 80)
-
-        about_button = QtWidgets.QPushButton(self.about_window)
-        about_button.setText("Click Here Right Now!")
-        about_button.move(65, 105)
-        self.about_window.show()
-        self.about_window.raise_()
 
     def enter_box(self, partialed, event):
         partialed.setStyleSheet('text-decoration: underline;')
@@ -446,8 +434,6 @@ class SettingsWindow:
         low_rate_grid.addWidget(self.hourly_dbmr_input, 1, 1)
         low_rate_grid.addWidget(self.ignore_no_budget, 2, 0, 1, 2)
 
-        self.window.raise_()
-
     def set_startup_state(self):
         """ Enables / Disables 'Run on startup' in json """
         if self.json_content["Run on startup"] is True:
@@ -490,6 +476,22 @@ class SettingsWindow:
     def set_ignore_no_budget(self):
         """ Enables / Disables if to ignore job posts without a specified budget in json """
         self.json_content["Ignore no budget"] = not self.json_content["Ignore no budget"]
+
+
+class AboutWindow:
+    def __init__(self):
+        """ Creates program's About window """
+        self.window = QtWidgets.QWidget()
+        self.window.setWindowTitle("About")
+        self.window.setGeometry(300, 300, 300, 300)
+
+        label = QtWidgets.QLabel(self.window)
+        label.setText("Created by The Philgrim")
+        label.move(75, 80)
+
+        button = QtWidgets.QPushButton(self.window)
+        button.setText("Click Here Right Now!")
+        button.move(65, 105)
 
 
 class WorkerThread(QtCore.QThread):

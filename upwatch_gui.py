@@ -50,7 +50,7 @@ def set_url(json_content, window, close_window=False):
     else:
         json_content["Requests URL"] = ""
     if close_window:
-        window.set_url_window.close()
+        appcore.url_dialog.window.close()
 
 
 def print_url_qline(json_content, qline):  # TODO: Consider if this method can be merged with set_url()
@@ -74,6 +74,7 @@ class AppCore:
         self.app = QtWidgets.QApplication([])
         self.app.setQuitOnLastWindowClosed(False)
 
+        self.url_dialog = UrlDialog(self.json_content)
         settings = SettingsWindow(self.json_content)
         about = AboutWindow()
 
@@ -91,15 +92,15 @@ class AppCore:
         # Create the menu
         self.menu = QtWidgets.QMenu()
         url_action = QtWidgets.QAction("Set URL")
-        url_action.triggered.connect(self.set_url_window)
+        url_action.triggered.connect(lambda: self.show_raise_window(self.url_dialog, self.url_dialog.window))
         self.actions.append(url_action)
 
         settings_action = QtWidgets.QAction("Settings")
-        settings_action.triggered.connect(lambda: self.show_raise_window(settings.window))
+        settings_action.triggered.connect(lambda: self.show_raise_window(settings, settings.window))
         self.actions.append(settings_action)
 
         about_action = QtWidgets.QAction("About")
-        about_action.triggered.connect(lambda: self.show_raise_window(about.window))
+        about_action.triggered.connect(lambda: self.show_raise_window(about, about.window))
         self.actions.append(about_action)
 
         # Add a Quit option to the menu.
@@ -116,7 +117,7 @@ class AppCore:
 
         # Launches settings window on program start if no Requests URL is defined.
         if not self.json_content["Requests URL"]:
-            self.settings_window()  # instantiate settings class Here
+            self.show_raise_window(settings, settings.window)  # instantiate settings class Here
 
         self.worker_thread = WorkerThread(self.json_content)
         self.worker_thread.job_done.connect(self.on_job_done)
@@ -125,11 +126,13 @@ class AppCore:
 
         self.tray.messageClicked.connect(self.message_clicked)
 
-    def show_raise_window(self, window):
+    def show_raise_window(self, instance, window):
+        if instance == 'settings' or 'url_dialog':
+            print_url_qline(self.json_content, instance.url_input)
         window.show()
         window.raise_()
 
-    def test_func(self, url, event):  # get errors from moving this out from class
+    def test_func(self, url, event):  # TODO: Move this outside class or to other class
         webbrowser.open_new_tab(url)
 
     def start_logic_thread(self):
@@ -142,25 +145,6 @@ class AppCore:
         """ Closes Upwatch """
         # upwatch.write_to_json(self.json_content, json_path)
         self.app.quit()
-
-    # TODO: Make sure set_url_window shows up under the Upwatch Icon!
-
-    # "Set URL" Window
-    def set_url_window(self):
-        """ Creates the 'Set URL' dialog for user to specify URL to scrape from """
-        self.set_url_window = QtWidgets.QDialog()
-        self.paste_url = QtWidgets.QLineEdit(self.set_url_window)
-        self.paste_url.setPlaceholderText("Paste Valid Upwork URL here")
-        self.set_url_window.setGeometry(750, 0, 200, 30)
-        self.paste_url.resize(200, 30)  # Makes QLineEdit fill size of dialog window
-        self.paste_url.returnPressed.connect(lambda: set_url(self.paste_url, self.json_content, True))
-        self.set_url_window.setWindowFlags(
-            QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint
-        )
-        if self.json_content["Requests URL"]:
-            print_url_qline(self.json_content, self.paste_url)
-        self.set_url_window.show()
-        # TODO: Add "QRegexpValidator − Checks input against a Regex expression"
 
     def enter_box(self, partialed, event):
         partialed.setStyleSheet('text-decoration: underline;')
@@ -312,9 +296,28 @@ class AppCore:
             self.job_post_dialog()
 
 
-class SettingsWindow:
+class UrlDialog:
+    """ Creates the 'Set URL' dialog for user to specify URL to scrape from """
     def __init__(self, json_content):
-        """ Creates Program's Settings Window """
+        self.json_content = json_content
+        self.window = QtWidgets.QDialog()
+        self.window.setGeometry(750, 0, 200, 30)  # TODO: Make sure this dialog opens under icon
+        self.window.setWindowFlags(
+            QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint
+        )
+        self.url_input = QtWidgets.QLineEdit(self.window)
+        self.url_input.setPlaceholderText("Paste Valid Upwork URL here")
+        self.url_input.resize(200, 30)  # Makes QLineEdit fill size of dialog window
+        self.url_input.returnPressed.connect(lambda: set_url(self.json_content, self.url_input, True))
+        # if self.json_content["Requests URL"]:
+        #     print_url_qline(self.json_content, self.url_input)
+
+        # TODO: Add "QRegexpValidator − Checks input against a Regex expression"
+
+
+class SettingsWindow:
+    """ Creates Program's Settings Window """
+    def __init__(self, json_content):
         self.json_content = json_content
         grid = QtWidgets.QGridLayout()
         self.window = QtWidgets.QWidget()
@@ -330,8 +333,8 @@ class SettingsWindow:
         # URL Text Input Box
         self.url_input = QtWidgets.QLineEdit()
         self.url_input.setPlaceholderText("https://www.upwork.com/...")
-        if self.json_content["Requests URL"]:
-            print_url_qline(self.json_content, self.url_input)  # ##
+        # if self.json_content["Requests URL"]:
+        #     print_url_qline(self.json_content, self.url_input)  # ##
         self.url_input.textChanged.connect(
             lambda: set_url(self.json_content, self.url_input))  # ##
 
@@ -479,8 +482,8 @@ class SettingsWindow:
 
 
 class AboutWindow:
+    """ Creates program's About window """
     def __init__(self):
-        """ Creates program's About window """
         self.window = QtWidgets.QWidget()
         self.window.setWindowTitle("About")
         self.window.setGeometry(300, 300, 300, 300)

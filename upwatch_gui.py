@@ -387,7 +387,7 @@ class SettingsWindow:
 
     def set_dbmr_state(self):
         """ Enables / Disables 'Don't bother me rate' in json """
-        if self.json_content["DBMR"] is False:
+        if not self.json_content["DBMR"]:
             self.json_content["DBMR"] = True
         else:
             self.json_content["DBMR"] = False

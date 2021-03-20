@@ -373,7 +373,7 @@ class SettingsWindow:
 
     def set_startup_state(self):
         """ Enables / Disables 'Run on startup' in json """
-        if self.json_content["Run on startup"] is True:
+        if self.json_content["Run on startup"]:
             # TODO: Create "are you sure"-window
             self.json_content["Run on startup"] = False
         else:

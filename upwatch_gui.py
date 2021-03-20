@@ -398,7 +398,7 @@ class SettingsWindow:
 
     def set_dbmr_fixed(self):
         """ Sets the value of 'Don't bother me rate' for fixed-price job posts """
-        if len(self.fixed_dbmr_input.text()) > 0:
+        if self.fixed_dbmr_input.text():
             self.json_content["Fixed Lowest Rate"] = int(self.fixed_dbmr_input.text())
         else:
             self.json_content["Fixed Lowest Rate"] = 0

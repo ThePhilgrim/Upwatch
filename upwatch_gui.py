@@ -78,7 +78,6 @@ class AppCore:
         settings = SettingsWindow(self.json_content)
         about = AboutWindow()
 
-
         # Create the icon
         logo_path = pathlib.Path(__file__).parent
         self.icon = QtGui.QIcon(str(logo_path / "uwlogo.png"))  # TODO: Fix own logo
@@ -133,6 +132,9 @@ class AppCore:
         window.show()
         window.raise_()
 
+    def test_func(self, url, event):  # TODO: Move this outside class or to other class
+        webbrowser.open_new_tab(url)
+
     def start_logic_thread(self):
         """ Calls the web scraping loop in a separate thread (to not freeze GUI) """
         threading.Thread(
@@ -141,8 +143,72 @@ class AppCore:
 
     def close_program(self):
         """ Closes Upwatch """
-        upwatch.write_to_json(self.json_content, json_path)
+        # upwatch.write_to_json(self.json_content, json_path)
         self.app.quit()
+
+    def enter_box(self, partialed, event):
+        partialed.setStyleSheet('text-decoration: underline;')
+
+    def exit_box(self, partialed, event):
+        partialed.setStyleSheet('text-decoration: none;')
+
+    def job_post_dialog(self):
+        self.scroll_area = QtWidgets.QScrollArea(widgetResizable=True)
+        self.widget = QtWidgets.QWidget()
+        self.scroll_area.setWidget(self.widget)
+        self.vbox = QtWidgets.QVBoxLayout()
+        self.widget.setLayout(self.vbox)
+
+        self.scroll_area.setFixedWidth(300)
+        self.scroll_area.setFixedHeight(600)
+
+        # TODO: Bind escape & enter to close window
+        # self.scroll_area.setWindowFlags(
+        #     QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint
+        # )
+
+        font_style = QtGui.QFont()
+        font_style.setBold(True)
+
+        for job_post in self.selected_new_job_posts:
+            self.dialog_groupbox = QtWidgets.QGroupBox(objectName="job_post_box")
+            self.groupbox_layout = QtWidgets.QVBoxLayout()
+            self.dialog_groupbox.setLayout(self.groupbox_layout)
+            self.dialog_groupbox.setMouseTracking(True)
+
+            title = QtWidgets.QLabel()
+            title.setText(job_post["Job Title"])
+            title.setWordWrap(True)
+            title.setFont(font_style)
+
+            self.dialog_groupbox.enterEvent = partial(self.enter_box, title)
+            self.dialog_groupbox.leaveEvent = partial(self.exit_box, title)
+
+            payment = QtWidgets.QLabel()
+            if job_post["Budget"]:
+                payment.setText(
+                    job_post["Payment Type"] + ": " + job_post["Budget"] + "\n"
+                )
+            else:
+                payment.setText(job_post["Payment Type"] + "\n")
+            payment.setWordWrap(True)
+
+            description = QtWidgets.QLabel()
+            description.setText(
+                job_post["Job Description"][:150].replace("\n\n", "\n") + "...\n"
+            )
+            description.setWordWrap(True)
+            url = job_post["Job Post URL"]
+
+            self.vbox.addWidget(self.dialog_groupbox)
+            self.groupbox_layout.addWidget(title)
+            self.groupbox_layout.addWidget(payment)
+            self.groupbox_layout.addWidget(description)
+
+            self.dialog_groupbox.mousePressEvent = partial(self.test_func, url)
+
+        self.scroll_area.move(800, 0)
+        self.scroll_area.show()
 
     def on_job_done(self, result):
         fixed_dbmr_rate = self.json_content["Fixed Lowest Rate"]
@@ -223,11 +289,11 @@ class AppCore:
                 10000,
             )
 
-    def message_clicked(self):  # TODO Does this need to move, or is it reasonable to keep it here?
+    def message_clicked(self):
         if self.selected_job_posts_number == 1:
             webbrowser.open_new_tab(self.current_job_post["Job Post URL"])
         else:
-            JobPostDialog(self.selected_new_job_posts)
+            self.job_post_dialog()
 
 
 class UrlDialog:
@@ -268,9 +334,9 @@ class SettingsWindow:
         self.url_input = QtWidgets.QLineEdit()
         self.url_input.setPlaceholderText("https://www.upwork.com/...")
         # if self.json_content["Requests URL"]:
-        #     print_url_qline(self.json_content, self.url_input)
+        #     print_url_qline(self.json_content, self.url_input)  # ##
         self.url_input.textChanged.connect(
-            lambda: set_url(self.json_content, self.url_input))
+            lambda: set_url(self.json_content, self.url_input))  # ##
 
         # Separator lines
         separator = QtWidgets.QFrame()
@@ -286,7 +352,7 @@ class SettingsWindow:
         self.run_on_startup.setText("Run Upwatch on system startup")
         self.run_on_startup.adjustSize()
         self.run_on_startup.setChecked(json_content["Run on startup"])
-        self.run_on_startup.toggled.connect(self.set_startup_state)
+        self.run_on_startup.toggled.connect(self.set_startup_state)  # ##
 
         # TODO: Add "Are you sure"-dialog if unchecked
 
@@ -296,7 +362,7 @@ class SettingsWindow:
         self.scrape_interval = QtWidgets.QComboBox()
         self.scrape_interval.addItems(["5", "10", "20", "30", "45", "60"])
         self.scrape_interval.setCurrentText(str(json_content["Scrape interval"]))
-        self.scrape_interval.currentIndexChanged.connect(self.set_scrape_interval)
+        self.scrape_interval.currentIndexChanged.connect(self.set_scrape_interval)  # ##
 
         # Don't Bother Me Rate groupBox
         low_rate_grid = QtWidgets.QGridLayout()
@@ -305,7 +371,7 @@ class SettingsWindow:
         self.dbmr_groupbox.setFlat(True)
         self.dbmr_groupbox.setCheckable(True)
         self.dbmr_groupbox.setChecked(json_content["DBMR"])
-        self.dbmr_groupbox.toggled.connect(self.set_dbmr_state)
+        self.dbmr_groupbox.toggled.connect(self.set_dbmr_state)  # ##
         self.dbmr_groupbox.setTitle("Don't-Bother-Me Rate")
         self.dbmr_groupbox.setToolTip(
             "Job posts with a budget lower than your set\nvalue will not trigger a notification."
@@ -323,7 +389,7 @@ class SettingsWindow:
         self.fixed_dbmr_input.setToolTip(
             "Any fixed-price job post paying less than your set value will be ignored."
         )
-        self.fixed_dbmr_input.textChanged.connect(self.set_dbmr_fixed)
+        self.fixed_dbmr_input.textChanged.connect(self.set_dbmr_fixed)  # ##
 
         # Hourly
         self.hourly_dbmr_label = QtWidgets.QLabel(self.dbmr_groupbox)
@@ -336,7 +402,7 @@ class SettingsWindow:
         self.hourly_dbmr_input.setToolTip(
             "Any hourly contract paying less than your set value will be ignored."
         )
-        self.hourly_dbmr_input.textChanged.connect(self.set_dbmr_hourly)
+        self.hourly_dbmr_input.textChanged.connect(self.set_dbmr_hourly)  # ##
 
         # Ignore Posts without budget/rate Checkbox
         self.ignore_no_budget = QtWidgets.QCheckBox(self.dbmr_groupbox)
@@ -345,7 +411,7 @@ class SettingsWindow:
         )
         self.ignore_no_budget.adjustSize()
         self.ignore_no_budget.setChecked(json_content["Ignore no budget"])
-        self.ignore_no_budget.toggled.connect(self.set_ignore_no_budget)
+        self.ignore_no_budget.toggled.connect(self.set_ignore_no_budget)  # ##
 
         # Add widgets to grid layout
         grid.addWidget(self.url_label, 0, 0, alignment=QtCore.Qt.AlignLeft)
@@ -451,80 +517,6 @@ class WorkerThread(QtCore.QThread):
             print("job done. Sleeping " + str(sleep_time) + " minute(s).")
             time.sleep(sleep_time * 60)
             print("Let's go again")
-
-
-class JobPostDialog:
-    """ Creates the window containing job posts when user clicks push notification
-        (when more than 1 new job post) """
-    def __init__(self, selected_new_job_posts):
-        self.selected_new_job_posts = selected_new_job_posts
-
-        widget = QtWidgets.QWidget()
-        self.scroll_area = QtWidgets.QScrollArea(widgetResizable=True)
-        self.scroll_area.setWidget(widget)
-        vbox_layout = QtWidgets.QVBoxLayout()
-        widget.setLayout(vbox_layout)
-
-        self.scroll_area.setFixedWidth(300)
-        self.scroll_area.setFixedHeight(600)
-
-        # TODO: Bind escape & enter to close window
-        # scroll_area.setWindowFlags(
-        #     QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint
-        # )
-
-        font_style = QtGui.QFont()
-        font_style.setBold(True)
-
-        # Creates the widgets that comprise the job posts
-        for job_post in selected_new_job_posts:
-            dialog_groupbox = QtWidgets.QGroupBox(objectName="job_post_box")
-            groupbox_layout = QtWidgets.QVBoxLayout()
-            dialog_groupbox.setLayout(groupbox_layout)
-            dialog_groupbox.setMouseTracking(True)
-
-            title = QtWidgets.QLabel()
-            title.setText(job_post["Job Title"])
-            title.setWordWrap(True)
-            title.setFont(font_style)
-
-            dialog_groupbox.enterEvent = partial(self.enter_box, title)
-            dialog_groupbox.leaveEvent = partial(self.exit_box, title)
-
-            payment = QtWidgets.QLabel()
-            if job_post["Budget"]:
-                payment.setText(
-                    job_post["Payment Type"] + ": " + job_post["Budget"] + "\n"
-                )
-            else:
-                payment.setText(job_post["Payment Type"] + "\n")
-            payment.setWordWrap(True)
-
-            description = QtWidgets.QLabel()
-            description.setText(
-                job_post["Job Description"][:150].replace("\n\n", "\n") + "...\n"
-            )
-            description.setWordWrap(True)
-            url = job_post["Job Post URL"]
-
-            vbox_layout.addWidget(dialog_groupbox)
-            groupbox_layout.addWidget(title)
-            groupbox_layout.addWidget(payment)
-            groupbox_layout.addWidget(description)
-
-            dialog_groupbox.mousePressEvent = partial(self.open_in_browser, url)
-
-        self.scroll_area.move(800, 0)  # TODO: Change this when possible to get X coordinate of app icon
-        self.scroll_area.show()
-
-    def open_in_browser(self, url, event):
-        webbrowser.open_new_tab(url)
-
-    def enter_box(self, partialed, event):
-        partialed.setStyleSheet('text-decoration: underline;')
-
-    def exit_box(self, partialed, event):
-        partialed.setStyleSheet('text-decoration: none;')
 
 
 json_path = pathlib.Path(__file__).parent

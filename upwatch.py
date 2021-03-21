@@ -2,13 +2,18 @@ import requests
 from bs4 import BeautifulSoup
 import json
 import time
+import pathlib
+from typing import Any, List
 
+# TODO: use TypedDict for these
+JsonContent = Any
+JobPost = Any
 
 # !import re  # For looking for eventual word counts in job posts & controlling the validity of url input.
 
 
 # TODO: Add to json: user agent
-def read_from_json(json_path):
+def read_from_json(json_path: pathlib.Path) -> JsonContent:
     """ Reads all the job posts from job_posts.json """
     try:
         with open(json_path / "job_posts.json", "r") as job_posts_json:
@@ -30,7 +35,7 @@ def read_from_json(json_path):
         return json_content, json_found
 
 
-def write_to_json(json_content, json_path):
+def write_to_json(json_content: JsonContent, json_path: pathlib.Path) -> None:
     """ Writes the latest web scrape and UserInput data to job_posts.json """
     json_dict = {
         "Requests URL": json_content["Requests URL"],
@@ -46,7 +51,7 @@ def write_to_json(json_content, json_path):
         json.dump(json_dict, json_dump, indent=4)
 
 
-def extract_hourly_price(hourly_payment_type):
+def extract_hourly_price(hourly_payment_type: str) -> int:
     """ Returns the hourly payment as int for message_printer() if-statement """
     if "-" in hourly_payment_type:
         # Accounts for job_post["Payment Type"] == "Hourly: $X.00–$Y.00"
@@ -57,7 +62,7 @@ def extract_hourly_price(hourly_payment_type):
         return int(float(hourly_payment_type.split()[1].lstrip("$")))
 
 
-def extract_fixed_price(fixed_payment_type):
+def extract_fixed_price(fixed_payment_type: str) -> int:
     """ Returns the fixed price as int for message_printer() if-statement """
     # Accounts for job_post["Budget"] == "$1,234"
     if "," in fixed_payment_type:
@@ -73,7 +78,9 @@ def extract_fixed_price(fixed_payment_type):
         return int(fixed_payment_type.lstrip("$"))
 
 
-def json_difference_checker(json_content, job_post_list):
+def json_difference_checker(
+    json_content: JsonContent, job_post_list: List[JobPost]
+) -> List[JobPost]:
     """Checks the difference between current scrape and job posts
     stored in json to print any new job posts"""
 
@@ -90,7 +97,7 @@ def json_difference_checker(json_content, job_post_list):
     return new_job_posts
 
 
-def job_post_scraper(json_content):
+def job_post_scraper(json_content: JsonContent) -> List[JobPost]:
     """ Scrapes Upwork for job posts and stores details in variables """
     # TODO: Control that input is valid upwork search link. (Regex library)
     # TODO: Tell the user if there is no URL specified when trying to do request

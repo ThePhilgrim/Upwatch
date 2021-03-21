@@ -170,19 +170,3 @@ def job_post_scraper(json_content):
         json_content["Job Posts"] = job_post_list
 
     return json_difference_checker(json_content, job_post_list)
-
-
-"""
-
-XML-file Run on Startup Todo list:
-
-On program startup first time (if there is no json maybe?), create xml file
-as standard is to run on startup.
-
-File needs to be created in the right place depending on system – Appdirs?
-
-XML creation should be a function in upwatch.py
-
-State from settings window will call separate function (load/unload keywoard?)
-
-"""

@@ -45,7 +45,7 @@ def manage_startup_plist_file(json_content):
 def set_url(json_content, window, close_window=False):
     """ Accepts user input URL and stores it in json_content """
     # TODO: VALIDITY CHECK - CHECK QT DESIGNER WIDGET
-    if len(window.text()) > 0:
+    if window.text():
         json_content["Requests URL"] = window.text()
     else:
         json_content["Requests URL"] = ""
@@ -92,11 +92,11 @@ class AppCore:
         # Create the menu
         self.menu = QtWidgets.QMenu()
         url_action = QtWidgets.QAction("Set URL")
-        url_action.triggered.connect(lambda: self.show_raise_window(self.url_dialog, self.url_dialog.window))
+        url_action.triggered.connect(lambda: self.show_raise_window(self.url_dialog, self.url_dialog.window, True))
         self.actions.append(url_action)
 
         settings_action = QtWidgets.QAction("Settings")
-        settings_action.triggered.connect(lambda: self.show_raise_window(settings, settings.window))
+        settings_action.triggered.connect(lambda: self.show_raise_window(settings, settings.window, True))
         self.actions.append(settings_action)
 
         about_action = QtWidgets.QAction("About")
@@ -126,8 +126,9 @@ class AppCore:
 
         self.tray.messageClicked.connect(self.message_clicked)
 
-    def show_raise_window(self, instance, window):
-        if instance == 'settings' or 'url_dialog':
+    def show_raise_window(self, instance, window, _print=False):
+        # Shows the currently set URL if window is settins or url dialog
+        if _print:
             print_url_qline(self.json_content, instance.url_input)
         window.show()
         window.raise_()
@@ -143,7 +144,7 @@ class AppCore:
 
     def close_program(self):
         """ Closes Upwatch """
-        # upwatch.write_to_json(self.json_content, json_path)
+        upwatch.write_to_json(self.json_content, json_path)
         self.app.quit()
 
     def enter_box(self, partialed, event):
@@ -306,11 +307,10 @@ class UrlDialog:
             QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint
         )
         self.url_input = QtWidgets.QLineEdit(self.window)
+        self.url_input.setClearButtonEnabled(True)
         self.url_input.setPlaceholderText("Paste Valid Upwork URL here")
         self.url_input.resize(200, 30)  # Makes QLineEdit fill size of dialog window
         self.url_input.returnPressed.connect(lambda: set_url(self.json_content, self.url_input, True))
-        # if self.json_content["Requests URL"]:
-        #     print_url_qline(self.json_content, self.url_input)
 
         # TODO: Add "QRegexpValidator − Checks input against a Regex expression"
 
@@ -333,10 +333,8 @@ class SettingsWindow:
         # URL Text Input Box
         self.url_input = QtWidgets.QLineEdit()
         self.url_input.setPlaceholderText("https://www.upwork.com/...")
-        # if self.json_content["Requests URL"]:
-        #     print_url_qline(self.json_content, self.url_input)  # ##
         self.url_input.textChanged.connect(
-            lambda: set_url(self.json_content, self.url_input))  # ##
+            lambda: set_url(self.json_content, self.url_input))
 
         # Separator lines
         separator = QtWidgets.QFrame()
@@ -352,7 +350,7 @@ class SettingsWindow:
         self.run_on_startup.setText("Run Upwatch on system startup")
         self.run_on_startup.adjustSize()
         self.run_on_startup.setChecked(json_content["Run on startup"])
-        self.run_on_startup.toggled.connect(self.set_startup_state)  # ##
+        self.run_on_startup.toggled.connect(self.set_startup_state)
 
         # TODO: Add "Are you sure"-dialog if unchecked
 
@@ -362,7 +360,7 @@ class SettingsWindow:
         self.scrape_interval = QtWidgets.QComboBox()
         self.scrape_interval.addItems(["5", "10", "20", "30", "45", "60"])
         self.scrape_interval.setCurrentText(str(json_content["Scrape interval"]))
-        self.scrape_interval.currentIndexChanged.connect(self.set_scrape_interval)  # ##
+        self.scrape_interval.currentIndexChanged.connect(self.set_scrape_interval)
 
         # Don't Bother Me Rate groupBox
         low_rate_grid = QtWidgets.QGridLayout()
@@ -439,7 +437,7 @@ class SettingsWindow:
 
     def set_startup_state(self):
         """ Enables / Disables 'Run on startup' in json """
-        if self.json_content["Run on startup"] is True:
+        if self.json_content["Run on startup"]:
             # TODO: Create "are you sure"-window
             self.json_content["Run on startup"] = False
         else:
@@ -453,7 +451,7 @@ class SettingsWindow:
 
     def set_dbmr_state(self):
         """ Enables / Disables 'Don't bother me rate' in json """
-        if self.json_content["DBMR"] is False:
+        if not self.json_content["DBMR"]:
             self.json_content["DBMR"] = True
         else:
             self.json_content["DBMR"] = False
@@ -464,14 +462,14 @@ class SettingsWindow:
 
     def set_dbmr_fixed(self):
         """ Sets the value of 'Don't bother me rate' for fixed-price job posts """
-        if len(self.fixed_dbmr_input.text()) > 0:
+        if self.fixed_dbmr_input.text():
             self.json_content["Fixed Lowest Rate"] = int(self.fixed_dbmr_input.text())
         else:
             self.json_content["Fixed Lowest Rate"] = 0
 
     def set_dbmr_hourly(self):
         """ Sets the value of 'Don't bother me rate' for hourly job posts """
-        if len(self.hourly_dbmr_input.text()) > 0:
+        if self.hourly_dbmr_input.text():
             self.json_content["Hourly Lowest Rate"] = int(self.hourly_dbmr_input.text())
         else:
             self.json_content["Hourly Lowest Rate"] = 0

@@ -36,14 +36,23 @@ def manage_startup_plist_file(json_content: upwatch.JsonContent) -> None:
 </dict>
 </plist>"""
 
-    if not (plist_path / "upwatch_startup.plist").exists() and json_content["Run on startup"]:
+    if (
+        not (plist_path / "upwatch_startup.plist").exists()
+        and json_content["Run on startup"]
+    ):
         with open(plist_path / "upwatch_startup.plist", "w") as startup_plist:
             startup_plist.write(plist_content)
-    elif (plist_path / "upwatch_startup.plist").exists() and not json_content["Run on startup"]:
+    elif (plist_path / "upwatch_startup.plist").exists() and not json_content[
+        "Run on startup"
+    ]:
         (plist_path / "upwatch_startup.plist").unlink()
 
 
-def set_url(json_content: upwatch.JsonContent, window: QtWidgets.QWidget, close_window: bool = False) -> None:
+def set_url(
+    json_content: upwatch.JsonContent,
+    window: QtWidgets.QWidget,
+    close_window: bool = False,
+) -> None:
     """ Accepts user input URL and stores it in json_content """
     # TODO: VALIDITY CHECK - CHECK QT DESIGNER WIDGET
     if window.text():
@@ -54,7 +63,9 @@ def set_url(json_content: upwatch.JsonContent, window: QtWidgets.QWidget, close_
         appcore.url_dialog.window.close()
 
 
-def print_url_qline(json_content: upwatch.JsonContent, qline: QtWidgets.QWidget) -> None:  # TODO: Consider if this method can be merged with set_url()
+def print_url_qline(
+    json_content: upwatch.JsonContent, qline: QtWidgets.QWidget
+) -> None:  # TODO: Consider if this method can be merged with set_url()
     """ Shows previously input URL in text input fields """
     qline.setToolTip(json_content["Requests URL"])
     qline.setText(json_content["Requests URL"])
@@ -93,15 +104,23 @@ class AppCore:
         # Create the menu
         self.menu = QtWidgets.QMenu()
         url_action = QtWidgets.QAction("Set URL")
-        url_action.triggered.connect(lambda: self.show_raise_window(self.url_dialog, self.url_dialog.window, True))
+        url_action.triggered.connect(
+            lambda: self.show_raise_window(
+                self.url_dialog, self.url_dialog.window, True
+            )
+        )
         self.actions.append(url_action)
 
         settings_action = QtWidgets.QAction("Settings")
-        settings_action.triggered.connect(lambda: self.show_raise_window(settings, settings.window, True))
+        settings_action.triggered.connect(
+            lambda: self.show_raise_window(settings, settings.window, True)
+        )
         self.actions.append(settings_action)
 
         about_action = QtWidgets.QAction("About")
-        about_action.triggered.connect(lambda: self.show_raise_window(about, about.window))
+        about_action.triggered.connect(
+            lambda: self.show_raise_window(about, about.window)
+        )
         self.actions.append(about_action)
 
         # Add a Quit option to the menu.
@@ -118,7 +137,9 @@ class AppCore:
 
         # Launches settings window on program start if no Requests URL is defined.
         if not self.json_content["Requests URL"]:
-            self.show_raise_window(settings, settings.window)  # instantiate settings class Here
+            self.show_raise_window(
+                settings, settings.window
+            )  # instantiate settings class Here
 
         self.worker_thread = WorkerThread(self.json_content)
         self.worker_thread.job_done.connect(self.on_job_done)
@@ -127,32 +148,36 @@ class AppCore:
 
         self.tray.messageClicked.connect(self.message_clicked)
 
-    def show_raise_window(self, instance: AppCore, window: QtWidgets.QWidget, _print: bool = False) -> None:
+    def show_raise_window(
+        self, instance: AppCore, window: QtWidgets.QWidget, _print: bool = False
+    ) -> None:
         # Shows the currently set URL if window is settins or url dialog
         if _print:
             print_url_qline(self.json_content, instance.url_input)
         window.show()
         window.raise_()
 
-    def test_func(self, url: str, event: XXXXXXXXXXXX) -> None:  # TODO: Move this outside class or to other class
+    def test_func(
+        self, url: str, event: QtGui.QMouseEvent
+    ) -> None:  # TODO: Move this outside class or to other class
         webbrowser.open_new_tab(url)
 
-    def start_logic_thread(self):
+    def start_logic_thread(self) -> None:
         """ Calls the web scraping loop in a separate thread (to not freeze GUI) """
         threading.Thread(
             target=upwatch.scrape_loop, args=[json_content], daemon=True
         ).start()
 
-    def close_program(self):
+    def close_program(self) -> None:
         """ Closes Upwatch """
         upwatch.write_to_json(self.json_content, json_path)
         self.app.quit()
 
-    def enter_box(self, partialed: XXXXXXXXX, event: XXXXXXXXXXXXX) -> None:
-        partialed.setStyleSheet('text-decoration: underline;')
+    def enter_box(self, partialed: QtWidgets.QLabel, event: QtGui.QEnterEvent) -> None:
+        partialed.setStyleSheet("text-decoration: underline;")
 
-    def exit_box(self, partialed: XXXXXX, event: XXXXXXXX) -> None:
-        partialed.setStyleSheet('text-decoration: none;')
+    def exit_box(self, partialed: QtWidgets.QLabel, event: QtGui.QEvent) -> None:
+        partialed.setStyleSheet("text-decoration: none;")
 
     def job_post_dialog(self) -> None:
         self.scroll_area = QtWidgets.QScrollArea(widgetResizable=True)
@@ -213,6 +238,8 @@ class AppCore:
         self.scroll_area.show()
 
     def on_job_done(self, result: XXXXXXX) -> None:
+        print(result)
+        print("hello")
         fixed_dbmr_rate = self.json_content["Fixed Lowest Rate"]
 
         hourly_dbmr_rate = self.json_content["Hourly Lowest Rate"]
@@ -291,7 +318,7 @@ class AppCore:
                 10000,
             )
 
-    def message_clicked(self):
+    def message_clicked(self) -> None:
         if self.selected_job_posts_number == 1:
             webbrowser.open_new_tab(self.current_job_post["Job Post URL"])
         else:
@@ -300,10 +327,13 @@ class AppCore:
 
 class UrlDialog:
     """ Creates the 'Set URL' dialog for user to specify URL to scrape from """
+
     def __init__(self, json_content: upwatch.JsonContent) -> None:
         self.json_content = json_content
         self.window = QtWidgets.QDialog()
-        self.window.setGeometry(750, 0, 200, 30)  # TODO: Make sure this dialog opens under icon
+        self.window.setGeometry(
+            750, 0, 200, 30
+        )  # TODO: Make sure this dialog opens under icon
         self.window.setWindowFlags(
             QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint
         )
@@ -311,13 +341,16 @@ class UrlDialog:
         self.url_input.setClearButtonEnabled(True)
         self.url_input.setPlaceholderText("Paste Valid Upwork URL here")
         self.url_input.resize(200, 30)  # Makes QLineEdit fill size of dialog window
-        self.url_input.returnPressed.connect(lambda: set_url(self.json_content, self.url_input, True))
+        self.url_input.returnPressed.connect(
+            lambda: set_url(self.json_content, self.url_input, True)
+        )
 
         # TODO: Add "QRegexpValidator − Checks input against a Regex expression"
 
 
 class SettingsWindow:
     """ Creates Program's Settings Window """
+
     def __init__(self, json_content: upwatch.JsonContent) -> None:
         self.json_content = json_content
         grid = QtWidgets.QGridLayout()
@@ -335,7 +368,8 @@ class SettingsWindow:
         self.url_input = QtWidgets.QLineEdit()
         self.url_input.setPlaceholderText("https://www.upwork.com/...")
         self.url_input.textChanged.connect(
-            lambda: set_url(self.json_content, self.url_input))
+            lambda: set_url(self.json_content, self.url_input)
+        )
 
         # Separator lines
         separator = QtWidgets.QFrame()
@@ -356,7 +390,9 @@ class SettingsWindow:
         # TODO: Add "Are you sure"-dialog if unchecked
 
         # Set scraping interval
-        self.scrape_interval_label = QtWidgets.QLabel("How often should Upwatch check \nfor new job posts? (minutes)")
+        self.scrape_interval_label = QtWidgets.QLabel(
+            "How often should Upwatch check \nfor new job posts? (minutes)"
+        )
         self.scrape_interval_label.adjustSize()
         self.scrape_interval = QtWidgets.QComboBox()
         self.scrape_interval.addItems(["5", "10", "20", "30", "45", "60"])
@@ -414,17 +450,13 @@ class SettingsWindow:
 
         # Add widgets to grid layout
         grid.addWidget(self.url_label, 0, 0, alignment=QtCore.Qt.AlignLeft)
-        grid.addWidget(
-            self.url_input, 1, 0, 1, 2, alignment=QtCore.Qt.AlignTop
-        )
+        grid.addWidget(self.url_input, 1, 0, 1, 2, alignment=QtCore.Qt.AlignTop)
         grid.addWidget(separator, 2, 0, 1, 2)
         grid.addWidget(self.run_on_startup, 3, 0, alignment=QtCore.Qt.AlignLeft)
         grid.addWidget(self.scrape_interval_label, 4, 0)
         grid.addWidget(self.scrape_interval, 4, 1, alignment=QtCore.Qt.AlignRight)
         grid.addWidget(separator_2, 5, 0, 1, 2)
-        grid.addWidget(
-            self.dbmr_groupbox, 6, 0, 3, 2, alignment=QtCore.Qt.AlignBottom
-        )
+        grid.addWidget(self.dbmr_groupbox, 6, 0, 3, 2, alignment=QtCore.Qt.AlignBottom)
 
         low_rate_grid.addWidget(
             self.fixed_dbmr_label, 0, 0, alignment=QtCore.Qt.AlignBottom
@@ -477,11 +509,14 @@ class SettingsWindow:
 
     def set_ignore_no_budget(self) -> None:
         """ Enables / Disables if to ignore job posts without a specified budget in json """
-        self.json_content["Ignore no budget"] = not self.json_content["Ignore no budget"]
+        self.json_content["Ignore no budget"] = not self.json_content[
+            "Ignore no budget"
+        ]
 
 
 class AboutWindow:
     """ Creates program's About window """
+
     def __init__(self) -> None:
         self.window = QtWidgets.QWidget()
         self.window.setWindowTitle("About")

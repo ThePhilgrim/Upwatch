@@ -124,18 +124,18 @@ def job_post_scraper(json_content: JsonContent) -> List[JobPost]:
             )  # TODO: Figure out how to fetch User Agent on current system.
             response.raise_for_status()
             break
-        except requests.exceptions.HTTPError as errh:  # TODO Error messages need to be communicated to user in a different way.
-            print("HTTP Error:", errh)
-            print("Please try a different URL")
-            return
-        except requests.exceptions.ConnectionError:
-            print("Error Connecting")
-            print("Please check you internet connection and try again.")
-            return
+       # except requests.exceptions.HTTPError as errh:  # TODO Error messages need to be communicated to user in a different way.
+       #     print("HTTP Error:", errh)
+       #     print("Please try a different URL")
+       #     return
+       # except requests.exceptions.ConnectionError:
+       #     print("Error Connecting")
+       #     print("Please check you internet connection and try again.")
+       #     return
         except requests.exceptions.Timeout:
             print("Your request timed out.")
             if connection_attempts == 3:
-                return
+                raise NotImplementedError
             time.sleep(30)
             print("Trying again...")
             connection_attempts += 1

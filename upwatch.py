@@ -1,15 +1,39 @@
-import requests
 from bs4 import BeautifulSoup  # type: ignore
+from typing import TypedDict
+import requests
 import json
 import time
 import pathlib
-from typing import Any, List
-
-# TODO: use TypedDict for these
-JsonContent = Any
-JobPost = Any
+from typing import Optional, List
 
 # !import re  # For looking for eventual word counts in job posts & controlling the validity of url input.
+
+# TypedDict for Type checker to handle "Job Posts" key in json_content
+JobPost = TypedDict(
+    "JobPost",
+    {
+        "Job Title": str,
+        "Payment Type": str,
+        "Budget": str,
+        "Job Description": str,
+        "Job Post URL": str,
+    },
+)
+
+# TypedDict for Type checker to handle json_content
+JsonContent = TypedDict(
+    "JsonContent",
+    {
+        "Requests URL": str,
+        "Run on startup": bool,
+        "Scrape interval": int,
+        "DBMR": bool,
+        "Fixed Lowest Rate": int,
+        "Hourly Lowest Rate": int,
+        "Ignore no budget": bool,
+        "Job Posts": Optional[JobPost],
+    },
+)  # "Job Posts" can also be "None" . Does it matter?
 
 
 # TODO: Add to json: user agent
@@ -86,6 +110,7 @@ def json_difference_checker(
 
     old_job_urls = [job_post["Job Post URL"] for job_post in json_content["Job Posts"]]
 
+    old_job_urls.blah_blah_blah_blah()
     new_job_posts = [
         job_post
         for job_post in job_post_list
@@ -124,14 +149,14 @@ def job_post_scraper(json_content: JsonContent) -> List[JobPost]:
             )  # TODO: Figure out how to fetch User Agent on current system.
             response.raise_for_status()
             break
-       # except requests.exceptions.HTTPError as errh:  # TODO Error messages need to be communicated to user in a different way.
-       #     print("HTTP Error:", errh)
-       #     print("Please try a different URL")
-       #     return
-       # except requests.exceptions.ConnectionError:
-       #     print("Error Connecting")
-       #     print("Please check you internet connection and try again.")
-       #     return
+        # except requests.exceptions.HTTPError as errh:  # TODO Error messages need to be communicated to user in a different way.
+        #     print("HTTP Error:", errh)
+        #     print("Please try a different URL")
+        #     return
+        # except requests.exceptions.ConnectionError:
+        #     print("Error Connecting")
+        #     print("Please check you internet connection and try again.")
+        #     return
         except requests.exceptions.Timeout:
             print("Your request timed out.")
             if connection_attempts == 3:

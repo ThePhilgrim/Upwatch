@@ -1,41 +1,19 @@
-from bs4 import BeautifulSoup  # type: ignore
-from typing import TypedDict
 import requests
+from bs4 import BeautifulSoup  # type: ignore
 import json
 import time
 import pathlib
-from typing import Optional, List, Tuple
+from typing import Any, List
+
+# TODO: use TypedDict for these
+JsonContent = Any
+JobPost = Any
 
 # !import re  # For looking for eventual word counts in job posts & controlling the validity of url input.
 
-JobPost = TypedDict(
-    "JobPost",
-    {
-        "Job Title": str,
-        "Payment Type": str,
-        "Budget": str,
-        "Job Description": str,
-        "Job Post URL": str,
-    },
-)
-
-JsonContent = TypedDict(
-    "JsonContent",
-    {
-        "Requests URL": str,
-        "Run on startup": bool,
-        "Scrape interval": int,
-        "DBMR": bool,
-        "Fixed Lowest Rate": int,
-        "Hourly Lowest Rate": int,
-        "Ignore no budget": bool,
-        "Job Posts": Optional[List[JobPost]],
-    },
-)
-
 
 # TODO: Add to json: user agent
-def read_from_json(json_path: pathlib.Path) -> Tuple[JsonContent, bool]:
+def read_from_json(json_path: pathlib.Path) -> JsonContent:
     """ Reads all the job posts from job_posts.json """
     try:
         with open(json_path / "job_posts.json", "r") as job_posts_json:
@@ -146,14 +124,14 @@ def job_post_scraper(json_content: JsonContent) -> List[JobPost]:
             )  # TODO: Figure out how to fetch User Agent on current system.
             response.raise_for_status()
             break
-        # except requests.exceptions.HTTPError as errh:  # TODO Error messages need to be communicated to user in a different way.
-        #     print("HTTP Error:", errh)
-        #     print("Please try a different URL")
-        #     return
-        # except requests.exceptions.ConnectionError:
-        #     print("Error Connecting")
-        #     print("Please check you internet connection and try again.")
-        #     return
+       # except requests.exceptions.HTTPError as errh:  # TODO Error messages need to be communicated to user in a different way.
+       #     print("HTTP Error:", errh)
+       #     print("Please try a different URL")
+       #     return
+       # except requests.exceptions.ConnectionError:
+       #     print("Error Connecting")
+       #     print("Please check you internet connection and try again.")
+       #     return
         except requests.exceptions.Timeout:
             print("Your request timed out.")
             if connection_attempts == 3:
@@ -185,7 +163,7 @@ def job_post_scraper(json_content: JsonContent) -> List[JobPost]:
 
         job_post_url = job_post.find("a", class_="job-title-link").attrs["href"]
 
-        job_post_dict: JobPost = {
+        job_post_dict = {
             "Job Title": job_title,
             "Payment Type": job_payment_type,
             "Budget": job_budget,

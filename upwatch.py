@@ -31,7 +31,7 @@ JsonContent = TypedDict(
         "Ignore no budget": bool,
         "Job Posts": Optional[JobPost],
     },
-)  # "Job Posts" can also be "None" . Does it matter?
+)
 
 
 # TODO: Add to json: user agent

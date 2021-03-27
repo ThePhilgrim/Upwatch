@@ -35,7 +35,7 @@ JsonContent = TypedDict(
 
 
 # TODO: Add to json: user agent
-def read_from_json(json_path: pathlib.Path) -> JsonContent:
+def read_from_json(json_path: pathlib.Path) -> Tuple[JsonContent, bool]:
     """ Reads all the job posts from job_posts.json """
     try:
         with open(json_path / "job_posts.json", "r") as job_posts_json:

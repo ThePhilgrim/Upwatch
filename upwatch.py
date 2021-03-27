@@ -108,7 +108,6 @@ def json_difference_checker(
 
     old_job_urls = [job_post["Job Post URL"] for job_post in json_content["Job Posts"]]
 
-    old_job_urls.blah_blah_blah_blah()
     new_job_posts = [
         job_post
         for job_post in job_post_list

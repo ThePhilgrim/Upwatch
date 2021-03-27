@@ -185,7 +185,7 @@ def job_post_scraper(json_content: JsonContent) -> List[JobPost]:
 
         job_post_url = job_post.find("a", class_="job-title-link").attrs["href"]
 
-        job_post_dict = {
+        job_post_dict: JobPost = {
             "Job Title": job_title,
             "Payment Type": job_payment_type,
             "Budget": job_budget,

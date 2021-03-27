@@ -3,6 +3,7 @@ from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 from functools import partial
+from typing import List
 import threading
 import upwatch
 import time
@@ -99,7 +100,7 @@ class AppCore:
         self.tray.setIcon(self.icon)
         self.tray.setVisible(True)
 
-        self.actions = []
+        self.actions: List[QtWidgets.QAction] = []
 
         # Create the menu
         self.menu = QtWidgets.QMenu()
@@ -157,30 +158,26 @@ class AppCore:
         window.show()
         window.raise_()
 
-    def test_func(
+    def open_url(
         self, url: str, event: QtGui.QMouseEvent
     ) -> None:  # TODO: Move this outside class or to other class
         webbrowser.open_new_tab(url)
 
-    def start_logic_thread(self) -> None:
-        """ Calls the web scraping loop in a separate thread (to not freeze GUI) """
-        threading.Thread(
-            target=upwatch.scrape_loop, args=[json_content], daemon=True
-        ).start()
-
     def close_program(self) -> None:
         """ Closes Upwatch """
-        upwatch.write_to_json(self.json_content, json_path)
+        # upwatch.write_to_json(self.json_content, json_path)
         self.app.quit()
 
-    def enter_box(self, partialed: QtWidgets.QLabel, event: QtGui.QEnterEvent) -> None:
+    def enter_box(self, partialed: QtWidgets.QLabel, event: QtCore.QEvent) -> None:
+        print(event)
         partialed.setStyleSheet("text-decoration: underline;")
 
-    def exit_box(self, partialed: QtWidgets.QLabel, event: QtGui.QEvent) -> None:
+    def exit_box(self, partialed: QtWidgets.QLabel, event: QtCore.QEvent) -> None:
+        print(event)
         partialed.setStyleSheet("text-decoration: none;")
 
     def job_post_dialog(self) -> None:
-        self.scroll_area = QtWidgets.QScrollArea(widgetResizable=True)
+        self.scroll_area = QtWidgets.QScrollArea(widgetResizable=True)  # type: ignore
         self.widget = QtWidgets.QWidget()
         self.scroll_area.setWidget(self.widget)
         self.vbox = QtWidgets.QVBoxLayout()
@@ -232,12 +229,12 @@ class AppCore:
             self.groupbox_layout.addWidget(payment)
             self.groupbox_layout.addWidget(description)
 
-            self.dialog_groupbox.mousePressEvent = partial(self.test_func, url)
+            self.dialog_groupbox.mousePressEvent = partial(self.open_url, url)
 
         self.scroll_area.move(800, 0)
         self.scroll_area.show()
 
-    def on_job_done(self, result: upwatch.List[upwatch.JobPost]) -> None:
+    def on_job_done(self, result: List[upwatch.JobPost]) -> None:
         fixed_dbmr_rate = self.json_content["Fixed Lowest Rate"]
 
         hourly_dbmr_rate = self.json_content["Hourly Lowest Rate"]
@@ -430,7 +427,7 @@ class SettingsWindow:
         self.hourly_dbmr_input = QtWidgets.QLineEdit(self.dbmr_groupbox)
         self.hourly_dbmr_input.setPlaceholderText("e.g.  35")
         if self.json_content["Hourly Lowest Rate"] != 0:
-            self.dbmr_input.setText(str(self.json_content["Hourly Lowest Rate"]))
+            self.hourly_dbmr_input.setText(str(self.json_content["Hourly Lowest Rate"]))
         self.hourly_dbmr_input.setClearButtonEnabled(True)
         self.hourly_dbmr_input.setToolTip(
             "Any hourly contract paying less than your set value will be ignored."
@@ -478,7 +475,7 @@ class SettingsWindow:
 
     def set_scrape_interval(self) -> None:
         """ Sets the 'Scrape interval' state in json """
-        self.json_content["Scrape interval"] = self.scrape_interval.currentText()
+        self.json_content["Scrape interval"] = int(self.scrape_interval.currentText())
 
     def set_dbmr_state(self) -> None:
         """ Enables / Disables 'Don't bother me rate' in json """
@@ -543,7 +540,7 @@ class WorkerThread(QtCore.QThread):
         while not self.json_content["Requests URL"]:
             time.sleep(0.5)  # wait for url to be entered
         while True:
-            sleep_time = int(self.json_content["Scrape interval"])
+            sleep_time = self.json_content["Scrape interval"]
             new_job_posts = upwatch.job_post_scraper(self.json_content)
             self.job_done.emit(new_job_posts)
             print("job done. Sleeping " + str(sleep_time) + " minute(s).")

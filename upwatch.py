@@ -106,6 +106,7 @@ def json_difference_checker(
     """Checks the difference between current scrape and job posts
     stored in json to print any new job posts"""
 
+    assert json_content["Job Posts"] is not None
     old_job_urls = [job_post["Job Post URL"] for job_post in json_content["Job Posts"]]
 
     new_job_posts = [

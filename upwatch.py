@@ -4,7 +4,7 @@ import requests
 import json
 import time
 import pathlib
-from typing import Optional, List
+from typing import Optional, List, Tuple
 
 # !import re  # For looking for eventual word counts in job posts & controlling the validity of url input.
 

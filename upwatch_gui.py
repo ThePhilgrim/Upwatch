@@ -237,7 +237,7 @@ class AppCore:
         self.scroll_area.move(800, 0)
         self.scroll_area.show()
 
-    def on_job_done(self, result: List[upwatch.JobPost]) -> None:
+    def on_job_done(self, result: upwatch.List[upwatch.JobPost]) -> None:
         fixed_dbmr_rate = self.json_content["Fixed Lowest Rate"]
 
         hourly_dbmr_rate = self.json_content["Hourly Lowest Rate"]

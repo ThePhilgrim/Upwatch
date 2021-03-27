@@ -19,7 +19,6 @@ JobPost = TypedDict(
     },
 )
 
-# TypedDict for Type checker to handle json_content
 JsonContent = TypedDict(
     "JsonContent",
     {

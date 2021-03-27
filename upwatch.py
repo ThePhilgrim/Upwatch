@@ -29,7 +29,7 @@ JsonContent = TypedDict(
         "Fixed Lowest Rate": int,
         "Hourly Lowest Rate": int,
         "Ignore no budget": bool,
-        "Job Posts": Optional[JobPost],
+        "Job Posts": Optional[List[JobPost]],
     },
 )
 

@@ -8,7 +8,6 @@ from typing import Optional, List
 
 # !import re  # For looking for eventual word counts in job posts & controlling the validity of url input.
 
-# TypedDict for Type checker to handle "Job Posts" key in json_content
 JobPost = TypedDict(
     "JobPost",
     {

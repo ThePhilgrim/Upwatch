@@ -13,6 +13,8 @@ jobs:
     - run: |
         python3 -m black --check upwatch.py upwatch_gui.py
     - run: |
+        python3 -m pip install PyQt5-stubs
+    - run: |
         python3 -m pip install mypy
     - run: |
         python3 -m mypy upwatch.py upwatch_gui.py

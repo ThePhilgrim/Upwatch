@@ -1,0 +1,18 @@
+# https://medium.com/@doedotdev/mypy-for-github-action-7da1ebee99e7
+on: [push, pull_request]
+jobs:
+  black:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-python@v1
+      with:
+        python-version: "3.9"
+    - run: |
+        python3 -m pip install black
+    - run: |
+        python3 -m black --check upwatch.py upwatch_gui.py
+    - run: |
+        python3 -m pip install mypy
+    - run: |
+        python3 -m mypy --check upwatch.py upwatch_gui.py

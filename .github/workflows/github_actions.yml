@@ -12,6 +12,13 @@ jobs:
         python3 -m pip install black
     - run: |
         python3 -m black --check upwatch.py upwatch_gui.py
+  mypy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-python@v1
+      with:
+        python-version: "3.9"
     - run: |
         python3 -m pip install PyQt5-stubs
     - run: |

@@ -18,9 +18,14 @@ python3 -m pip install black
 
 black *.py
 
-
-
 #LOGIC
 #BeautifulSoup
 #Requests
 #LXML
+
+
+
+
+# For developers
+Following line can be comment out to debug job post dialog. Prevents writing new data to json.
+- upwatch.write_to_json(self.json_content, json_path

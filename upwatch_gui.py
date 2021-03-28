@@ -72,83 +72,6 @@ def print_url_qline(
     qline.setCursorPosition(0)
 
 
-def latest_job_posts_window(job_post_list: List[upwatch.JobPost]) -> None:
-    print("I'm here!!")
-    scroll_area = QtWidgets.QScrollArea(widgetResizable=True)  # type: ignore
-    widget = QtWidgets.QWidget()
-    scroll_area.setWidget(widget)
-    vbox = QtWidgets.QVBoxLayout()
-    widget.setLayout(vbox)
-
-    test_label = QtWidgets.QLabel()
-    test_label.setText("THIS IS A LABEL!!!!!!!")
-    vbox.addWidget(test_label)
-
-    scroll_area.setFixedWidth(300)
-    scroll_area.setFixedHeight(600)
-
-    scroll_area.show()
-    scroll_area.raise_()
-
-            # # https://github.com/python-qt-tools/PyQt5-stubs/issues/147
-            # self.scroll_area = QtWidgets.QScrollArea(widgetResizable=True)  # type: ignore
-            # self.widget = QtWidgets.QWidget()
-            # self.scroll_area.setWidget(self.widget)
-            # self.vbox = QtWidgets.QVBoxLayout()
-            # self.widget.setLayout(self.vbox)
-            #
-            # self.scroll_area.setFixedWidth(300)
-            # self.scroll_area.setFixedHeight(600)
-            #
-            # # TODO: Bind escape & enter to close window
-            # # self.scroll_area.setWindowFlags(
-            # #     QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint
-            # # )
-            #
-            # font_style = QtGui.QFont()
-            # font_style.setBold(True)
-            #
-            # for job_post in self.selected_new_job_posts:
-            #     self.dialog_groupbox = QtWidgets.QGroupBox(objectName="job_post_box")
-            #     self.groupbox_layout = QtWidgets.QVBoxLayout()
-            #     self.dialog_groupbox.setLayout(self.groupbox_layout)
-            #     self.dialog_groupbox.setMouseTracking(True)
-            #
-            #     title = QtWidgets.QLabel()
-            #     title.setText(job_post["Job Title"])
-            #     title.setWordWrap(True)
-            #     title.setFont(font_style)
-            #
-            #     self.dialog_groupbox.enterEvent = partial(self.enter_box, title)
-            #     self.dialog_groupbox.leaveEvent = partial(self.exit_box, title)
-            #
-            #     payment = QtWidgets.QLabel()
-            #     if job_post["Budget"]:
-            #         payment.setText(
-            #             job_post["Payment Type"] + ": " + job_post["Budget"] + "\n"
-            #         )
-            #     else:
-            #         payment.setText(job_post["Payment Type"] + "\n")
-            #     payment.setWordWrap(True)
-            #
-            #     description = QtWidgets.QLabel()
-            #     description.setText(
-            #         job_post["Job Description"][:150].replace("\n\n", "\n") + "...\n"
-            #     )
-            #     description.setWordWrap(True)
-            #     url = job_post["Job Post URL"]
-            #
-            #     self.vbox.addWidget(self.dialog_groupbox)
-            #     self.groupbox_layout.addWidget(title)
-            #     self.groupbox_layout.addWidget(payment)
-            #     self.groupbox_layout.addWidget(description)
-            #
-            #     self.dialog_groupbox.mousePressEvent = partial(self.open_url, url)
-            #
-            # self.scroll_area.move(800, 0)
-            # self.scroll_area.show()
-
-
 class AppCore:
     def __init__(self, json_content: upwatch.JsonContent, json_found: bool) -> None:
         # JSON Dict with URL, Don't Bother Me Rate, Job Posts
@@ -353,7 +276,6 @@ class AppCore:
 
         self.selected_job_posts_number = len(self.selected_new_job_posts)
 
-        latest_job_posts_window(self.selected_new_job_posts)
         if self.selected_job_posts_number == 1:
             self.current_job_post = self.selected_new_job_posts[0]
             if self.current_job_post["Payment Type"] == "Fixed-price":

@@ -149,7 +149,10 @@ class AppCore:
         self.tray.messageClicked.connect(self.message_clicked)
 
     def show_raise_window(
-        self, instance: Union[UrlDialog, SettingsWindow, AboutWindow], window: QtWidgets.QWidget, _print: bool = False
+        self,
+        instance: Union[UrlDialog, SettingsWindow, AboutWindow],
+        window: QtWidgets.QWidget,
+        _print: bool = False,
     ) -> None:
         # Shows the currently set URL if window is settins or url dialog
         if _print:

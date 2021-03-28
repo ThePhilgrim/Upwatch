@@ -172,7 +172,6 @@ class AppCore:
         partialed.setStyleSheet("text-decoration: underline;")
 
     def exit_box(self, partialed: QtWidgets.QLabel, event: QtCore.QEvent) -> None:
-        print(event)
         partialed.setStyleSheet("text-decoration: none;")
 
     def job_post_dialog(self) -> None:

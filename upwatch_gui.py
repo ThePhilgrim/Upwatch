@@ -165,7 +165,7 @@ class AppCore:
 
     def close_program(self) -> None:
         """ Closes Upwatch """
-        # upwatch.write_to_json(self.json_content, json_path)
+        upwatch.write_to_json(self.json_content, json_path)
         self.app.quit()
 
     def enter_box(self, partialed: QtWidgets.QLabel, event: QtCore.QEvent) -> None:

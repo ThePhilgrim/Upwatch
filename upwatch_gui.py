@@ -3,8 +3,7 @@ from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 from functools import partial
-from typing import List
-import threading
+from typing import List, Union
 import upwatch
 import time
 import webbrowser
@@ -150,7 +149,7 @@ class AppCore:
         self.tray.messageClicked.connect(self.message_clicked)
 
     def show_raise_window(
-        self, instance: AppCore, window: QtWidgets.QWidget, _print: bool = False
+        self, instance: Union[UrlDialog, SettingsWindow, AboutWindow], window: QtWidgets.QWidget, _print: bool = False
     ) -> None:
         # Shows the currently set URL if window is settins or url dialog
         if _print:
@@ -177,6 +176,7 @@ class AppCore:
         partialed.setStyleSheet("text-decoration: none;")
 
     def job_post_dialog(self) -> None:
+        # https://github.com/python-qt-tools/PyQt5-stubs/issues/147
         self.scroll_area = QtWidgets.QScrollArea(widgetResizable=True)  # type: ignore
         self.widget = QtWidgets.QWidget()
         self.scroll_area.setWidget(self.widget)
@@ -401,7 +401,7 @@ class SettingsWindow:
         self.dbmr_groupbox.setFlat(True)
         self.dbmr_groupbox.setCheckable(True)
         self.dbmr_groupbox.setChecked(json_content["DBMR"])
-        self.dbmr_groupbox.toggled.connect(self.set_dbmr_state)  # ##
+        self.dbmr_groupbox.toggled.connect(self.set_dbmr_state)
         self.dbmr_groupbox.setTitle("Don't-Bother-Me Rate")
         self.dbmr_groupbox.setToolTip(
             "Job posts with a budget lower than your set\nvalue will not trigger a notification."
@@ -419,7 +419,7 @@ class SettingsWindow:
         self.fixed_dbmr_input.setToolTip(
             "Any fixed-price job post paying less than your set value will be ignored."
         )
-        self.fixed_dbmr_input.textChanged.connect(self.set_dbmr_fixed)  # ##
+        self.fixed_dbmr_input.textChanged.connect(self.set_dbmr_fixed)
 
         # Hourly
         self.hourly_dbmr_label = QtWidgets.QLabel(self.dbmr_groupbox)
@@ -432,7 +432,7 @@ class SettingsWindow:
         self.hourly_dbmr_input.setToolTip(
             "Any hourly contract paying less than your set value will be ignored."
         )
-        self.hourly_dbmr_input.textChanged.connect(self.set_dbmr_hourly)  # ##
+        self.hourly_dbmr_input.textChanged.connect(self.set_dbmr_hourly)
 
         # Ignore Posts without budget/rate Checkbox
         self.ignore_no_budget = QtWidgets.QCheckBox(self.dbmr_groupbox)
@@ -441,7 +441,7 @@ class SettingsWindow:
         )
         self.ignore_no_budget.adjustSize()
         self.ignore_no_budget.setChecked(json_content["Ignore no budget"])
-        self.ignore_no_budget.toggled.connect(self.set_ignore_no_budget)  # ##
+        self.ignore_no_budget.toggled.connect(self.set_ignore_no_budget)
 
         # Add widgets to grid layout
         grid.addWidget(self.url_label, 0, 0, alignment=QtCore.Qt.AlignLeft)
